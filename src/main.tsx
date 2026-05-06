@@ -1,0 +1,32 @@
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { RouterProvider, createBrowserRouter, Navigate } from 'react-router-dom';
+import App from './App.tsx';
+import { LoginPage } from './pages/LoginPage';
+import PredictionsPage from './pages/PredictionsPage';
+import GroupsPage from './pages/GroupsPage';
+import './index.css';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+    children: [
+      { path: '/', element: <Navigate to="/palpites" /> },
+      { path: '/palpites', element: <PredictionsPage /> },
+      { path: '/tabela', element: <div>Tabela</div> },
+      { path: '/grupos', element: <GroupsPage /> },
+      { path: '/ranking', element: <div>Ranking</div> },
+    ],
+  },
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+]);
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>,
+);
