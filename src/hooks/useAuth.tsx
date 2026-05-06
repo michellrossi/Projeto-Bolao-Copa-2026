@@ -31,8 +31,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (isAdminUser) {
           setIsApproved(true);
         } else {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          setIsApproved(userDoc.exists() && userDoc.data()?.approved === true);
+          const userRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+          
+          if (!userDoc.exists()) {
+            // Auto-create missing user document for those already logged in
+            await setDoc(userRef, {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              lastLogin: new Date().toISOString(),
+              approved: false
+            });
+            setIsApproved(false);
+          } else {
+            setIsApproved(userDoc.data()?.approved === true);
+          }
         }
       } else {
         setIsAdmin(false);

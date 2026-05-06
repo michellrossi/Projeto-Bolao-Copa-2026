@@ -1,5 +1,6 @@
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Trophy, Mail, Github, LogIn } from 'lucide-react';
