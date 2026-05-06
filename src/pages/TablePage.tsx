@@ -3,9 +3,9 @@ import { motion } from 'motion/react';
 import { WORLD_CUP_2026_ROUNDS } from '../lib/matches';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/firebase';
-import { doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, collection, deleteDoc } from 'firebase/firestore';
 import { getFlagUrl } from '../lib/flags';
-import { Save, Lock, Edit3 } from 'lucide-react';
+import { Save, Lock, Edit3, Trash2 } from 'lucide-react';
 
 export default function TablePage() {
   const { isAdmin } = useAuth();
@@ -24,11 +24,21 @@ export default function TablePage() {
     return unsub;
   }, []);
 
-  const handleSaveResult = async (matchId: string, home: number, away: number) => {
+  const handleSaveResult = async (matchId: string, home: any, away: any) => {
+    if (home === '' || away === '') return;
     try {
-      await setDoc(doc(db, 'results', matchId), { home, away });
+      await setDoc(doc(db, 'results', matchId), { home: Number(home), away: Number(away) });
     } catch (error) {
       console.error("Error saving result:", error);
+    }
+  };
+
+  const handleResetResult = async (matchId: string) => {
+    if (!confirm("Tem certeza que deseja resetar o resultado deste jogo?")) return;
+    try {
+      await deleteDoc(doc(db, 'results', matchId));
+    } catch (error) {
+      console.error("Error resetting result:", error);
     }
   };
 
@@ -73,6 +83,7 @@ export default function TablePage() {
                   isAdmin={isAdmin} 
                   savedResult={results[match.id]} 
                   onSave={handleSaveResult}
+                  onReset={handleResetResult}
                 />
               ))}
             </tbody>
@@ -88,6 +99,7 @@ export default function TablePage() {
               isAdmin={isAdmin}
               savedResult={results[match.id]}
               onSave={handleSaveResult}
+              onReset={handleResetResult}
             />
           ))}
         </div>
@@ -96,15 +108,13 @@ export default function TablePage() {
   );
 }
 
-function ResultCard({ match, isAdmin, savedResult, onSave }: any) {
+function ResultCard({ match, isAdmin, savedResult, onSave, onReset }: any) {
   const [home, setHome] = useState(savedResult?.home ?? '');
   const [away, setAway] = useState(savedResult?.away ?? '');
 
   useEffect(() => {
-    if (savedResult) {
-      setHome(savedResult.home);
-      setAway(savedResult.away);
-    }
+    setHome(savedResult?.home ?? '');
+    setAway(savedResult?.away ?? '');
   }, [savedResult]);
 
   return (
@@ -130,12 +140,12 @@ function ResultCard({ match, isAdmin, savedResult, onSave }: any) {
             <div className="flex items-center gap-1">
               <input 
                 type="number" value={home} onChange={(e) => setHome(e.target.value)}
-                className="w-10 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black text-sm"
+                className="w-10 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black text-sm text-white"
               />
               <span className="text-white/20">-</span>
               <input 
                 type="number" value={away} onChange={(e) => setAway(e.target.value)}
-                className="w-10 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black text-sm"
+                className="w-10 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black text-sm text-white"
               />
             </div>
           ) : (
@@ -154,26 +164,32 @@ function ResultCard({ match, isAdmin, savedResult, onSave }: any) {
       </div>
 
       {isAdmin && (
-        <button 
-          onClick={() => onSave(match.id, Number(home), Number(away))}
-          className="w-full py-3 bg-primary text-dark rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
-        >
-          <Save size={14} /> Salvar Resultado
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => onSave(match.id, home, away)}
+            className="flex-1 py-3 bg-primary text-dark rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-all"
+          >
+            <Save size={14} /> Salvar
+          </button>
+          <button 
+            onClick={() => onReset(match.id)}
+            className="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white transition-all border border-red-500/10"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       )}
     </div>
   );
 }
 
-function ResultRow({ match, isAdmin, savedResult, onSave }: any) {
+function ResultRow({ match, isAdmin, savedResult, onSave, onReset }: any) {
   const [home, setHome] = useState(savedResult?.home ?? '');
   const [away, setAway] = useState(savedResult?.away ?? '');
 
   useEffect(() => {
-    if (savedResult) {
-      setHome(savedResult.home);
-      setAway(savedResult.away);
-    }
+    setHome(savedResult?.home ?? '');
+    setAway(savedResult?.away ?? '');
   }, [savedResult]);
 
   return (
@@ -205,14 +221,14 @@ function ResultRow({ match, isAdmin, savedResult, onSave }: any) {
                 type="number" 
                 value={home} 
                 onChange={(e) => setHome(e.target.value)}
-                className="w-12 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black focus:border-primary transition-all"
+                className="w-12 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black focus:border-primary transition-all text-white"
               />
               <span className="flex items-center text-white/20">-</span>
               <input 
                 type="number" 
                 value={away} 
                 onChange={(e) => setAway(e.target.value)}
-                className="w-12 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black focus:border-primary transition-all"
+                className="w-12 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black focus:border-primary transition-all text-white"
               />
             </>
           ) : (
@@ -226,12 +242,22 @@ function ResultRow({ match, isAdmin, savedResult, onSave }: any) {
       </td>
       {isAdmin && (
         <td className="px-6 py-4 text-right">
-          <button 
-            onClick={() => onSave(match.id, Number(home), Number(away))}
-            className="p-2.5 bg-primary/10 text-primary rounded-xl hover:bg-primary hover:text-dark transition-all"
-          >
-            <Save size={18} />
-          </button>
+          <div className="flex justify-end gap-2">
+            <button 
+              onClick={() => onSave(match.id, home, away)}
+              className="p-2.5 bg-primary/10 text-primary rounded-xl hover:bg-primary hover:text-dark transition-all border border-primary/10"
+              title="Salvar"
+            >
+              <Save size={18} />
+            </button>
+            <button 
+              onClick={() => onReset(match.id)}
+              className="p-2.5 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-500/10"
+              title="Resetar"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
         </td>
       )}
     </tr>
