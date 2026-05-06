@@ -25,8 +25,16 @@ export default function UsersPage() {
 
     const unsub = onSnapshot(collection(db, 'users'), (snapshot) => {
       const data: UserData[] = [];
-      snapshot.forEach((doc) => data.push(doc.data() as UserData));
-      setUsers(data.sort((a, b) => b.lastLogin.localeCompare(a.lastLogin)));
+      snapshot.forEach((doc) => {
+        const userData = doc.data() as UserData;
+        data.push(userData);
+      });
+      // Sort handling missing lastLogin
+      data.sort((a, b) => (b.lastLogin || '').localeCompare(a.lastLogin || ''));
+      setUsers(data);
+      setLoading(false);
+    }, (error) => {
+      console.error("Erro ao buscar usuários:", error);
       setLoading(false);
     });
 
