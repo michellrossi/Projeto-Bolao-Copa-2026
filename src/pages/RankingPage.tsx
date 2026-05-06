@@ -26,20 +26,26 @@ export default function RankingPage() {
       const results: any = {};
       resultsSnapshot.forEach(doc => results[doc.id] = doc.data());
 
-      // 2. Fetch all predictions (Note: requires Firestore rule 'allow read' for all)
+      // 2. Fetch all data
       try {
-        const predsSnapshot = await getDocs(collection(db, 'predictions'));
-        const usersSnapshot = await getDocs(collection(db, 'users')); // Assuming a users collection exists
+        const [predsSnapshot, usersSnapshot] = await Promise.all([
+          getDocs(collection(db, 'predictions')),
+          getDocs(collection(db, 'users'))
+        ]);
         
-        const usersData: any = {};
-        usersSnapshot.forEach(doc => usersData[doc.id] = doc.data());
+        const allPredictions: any = {};
+        predsSnapshot.forEach(doc => allPredictions[doc.id] = doc.data().matches || {});
 
         const rankingList: UserRanking[] = [];
 
-        predsSnapshot.forEach((doc) => {
-          const userId = doc.id;
-          const userPreds = doc.data().matches || {};
-          const userData = usersData[userId] || { displayName: 'Usuário', photoURL: '' };
+        usersSnapshot.forEach((userDoc) => {
+          const userData = userDoc.data();
+          
+          // Only show approved users
+          if (userData.approved !== true) return;
+
+          const userId = userDoc.id;
+          const userPreds = allPredictions[userId] || {};
 
           let totalPoints = 0;
           Object.entries(userPreds).forEach(([matchId, pred]: any) => {
@@ -57,13 +63,17 @@ export default function RankingPage() {
             name: userData.displayName || 'Competidor',
             photo: userData.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
             points: totalPoints,
-            trend: 'stable', // Simulation
+            trend: 'stable',
             trendValue: 0
           });
         });
 
-        // Sort by points
-        rankingList.sort((a, b) => b.points - a.points);
+        // Sort by points (DESC) then by name (ASC) as tie-breaker
+        rankingList.sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          return a.name.localeCompare(b.name);
+        });
+
         setRankings(rankingList);
         setLoading(false);
       } catch (error) {
