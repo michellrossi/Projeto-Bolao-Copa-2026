@@ -68,6 +68,8 @@ export default function PredictionsPage() {
         group: m.phase
       }))
     : activeRound?.matches || [];
+
+  return (
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
