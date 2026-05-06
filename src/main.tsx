@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage';
 import PredictionsPage from './pages/PredictionsPage';
 import GroupsPage from './pages/GroupsPage';
 import TablePage from './pages/TablePage';
+import RankingPage from './pages/RankingPage';
 import { AuthProvider } from './hooks/useAuth';
 import './index.css';
 
@@ -18,7 +19,7 @@ const router = createBrowserRouter([
       { path: '/palpites', element: <PredictionsPage /> },
       { path: '/tabela', element: <TablePage /> },
       { path: '/grupos', element: <GroupsPage /> },
-      { path: '/ranking', element: <div>Ranking</div> },
+      { path: '/ranking', element: <RankingPage /> },
     ],
   },
   {

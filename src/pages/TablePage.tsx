@@ -53,8 +53,9 @@ export default function TablePage() {
         )}
       </div>
 
-      <div className="glass-dark rounded-[2.5rem] overflow-hidden border-white/5">
-        <div className="overflow-x-auto">
+      <div className="space-y-4">
+        {/* Desktop Table View */}
+        <div className="hidden md:block glass-dark rounded-[2.5rem] overflow-hidden border-white/5">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-white/5">
@@ -77,7 +78,89 @@ export default function TablePage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Cards View */}
+        <div className="md:hidden space-y-4">
+          {WORLD_CUP_2026_ROUNDS.flatMap(r => r.matches).map((match) => (
+            <ResultCard
+              key={match.id}
+              match={match}
+              isAdmin={isAdmin}
+              savedResult={results[match.id]}
+              onSave={handleSaveResult}
+            />
+          ))}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function ResultCard({ match, isAdmin, savedResult, onSave }: any) {
+  const [home, setHome] = useState(savedResult?.home ?? '');
+  const [away, setAway] = useState(savedResult?.away ?? '');
+
+  useEffect(() => {
+    if (savedResult) {
+      setHome(savedResult.home);
+      setAway(savedResult.away);
+    }
+  }, [savedResult]);
+
+  return (
+    <div className="glass-dark p-6 rounded-[2rem] border-white/5 space-y-6">
+      <div className="flex justify-between items-center">
+        <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full">
+          Grupo {match.group}
+        </span>
+        <div className="text-right">
+          <p className="text-xs font-bold text-white/80">{match.date.split('-').reverse().join('/')}</p>
+          <p className="text-[10px] font-medium text-white/40 uppercase">{match.time}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 flex flex-col items-center gap-2">
+          <img src={getFlagUrl(match.homeTeam)} className="w-10 h-6 object-cover rounded shadow-sm" alt="" />
+          <span className="text-xs font-bold text-white text-center line-clamp-1">{match.homeTeam}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {isAdmin ? (
+            <div className="flex items-center gap-1">
+              <input 
+                type="number" value={home} onChange={(e) => setHome(e.target.value)}
+                className="w-10 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black text-sm"
+              />
+              <span className="text-white/20">-</span>
+              <input 
+                type="number" value={away} onChange={(e) => setAway(e.target.value)}
+                className="w-10 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black text-sm"
+              />
+            </div>
+          ) : (
+            <div className="bg-white/5 px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2">
+              <span className="text-lg font-black text-white">{savedResult?.home ?? '-'}</span>
+              <span className="text-white/20">-</span>
+              <span className="text-lg font-black text-white">{savedResult?.away ?? '-'}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 flex flex-col items-center gap-2">
+          <img src={getFlagUrl(match.awayTeam)} className="w-10 h-6 object-cover rounded shadow-sm" alt="" />
+          <span className="text-xs font-bold text-white text-center line-clamp-1">{match.awayTeam}</span>
+        </div>
+      </div>
+
+      {isAdmin && (
+        <button 
+          onClick={() => onSave(match.id, Number(home), Number(away))}
+          className="w-full py-3 bg-primary text-dark rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
+        >
+          <Save size={14} /> Salvar Resultado
+        </button>
+      )}
     </div>
   );
 }

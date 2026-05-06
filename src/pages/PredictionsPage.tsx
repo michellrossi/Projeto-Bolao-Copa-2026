@@ -154,12 +154,6 @@ function MatchCard({ match, prediction, result, onSave }: any) {
       className={`glass-dark p-6 rounded-[2rem] transition-all group relative overflow-hidden ${locked ? 'opacity-80' : 'hover:border-primary/30'}`}
     >
       <div className="absolute top-0 right-0 flex items-center">
-        {prediction && !result && (
-          <div className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-bl-xl font-black text-[9px] uppercase tracking-widest flex items-center gap-1 border-l border-b border-white/5">
-            <CheckCircle2 size={10} />
-            Salvo
-          </div>
-        )}
         {points !== null && (
           <div className={`px-4 py-2 rounded-bl-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 ${points === 3 ? 'bg-primary text-dark' : points === 1 ? 'bg-secondary text-dark' : 'bg-white/10 text-white/40'}`}>
             <Trophy size={14} />
