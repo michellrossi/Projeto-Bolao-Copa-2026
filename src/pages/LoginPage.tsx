@@ -49,22 +49,16 @@ export function LoginPage() {
         <div className="glass-dark p-8 md:p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center border-white/10">
           {/* Logo Area */}
           <motion.div 
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mb-8 glow-primary"
+            className="flex flex-col items-center mb-10"
           >
-            <Trophy className="w-10 h-10 text-dark stroke-[2.5px]" />
-          </motion.div>
-
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-black text-white mb-3 font-lexend tracking-tight uppercase">
-              Bolão <span className="text-primary">2026</span>
-            </h1>
-            <p className="text-white/60 font-medium">
+            <img src="https://iili.io/BZG2miP.png" alt="Bolão 2026" className="h-32 w-auto object-contain mb-4" />
+            <p className="text-white/60 font-medium text-center max-w-[280px]">
               A maior arena de palpites do mundo espera por você.
             </p>
-          </div>
+          </motion.div>
 
           <div className="w-full space-y-4">
             <motion.button 

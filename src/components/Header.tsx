@@ -45,9 +45,7 @@ export function Header() {
   return (
     <header className="bg-dark/80 backdrop-blur-xl flex justify-between items-center w-full px-6 h-20 fixed top-0 z-50 border-b border-white/5 shadow-2xl">
       <div className="flex items-center gap-4">
-        <h1 className="font-lexend text-xl font-black text-white tracking-tight uppercase">
-          Bolão <span className="text-primary">2026</span>
-        </h1>
+        <img src="https://iili.io/BZG2miP.png" alt="Bolão 2026" className="h-12 w-auto object-contain" />
       </div>
       
       <div className="flex items-center gap-3 relative">
