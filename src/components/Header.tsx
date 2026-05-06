@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Bell, LogOut, Clock, User as UserIcon, X, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Bell, LogOut, Clock, User as UserIcon, X, CheckCircle2, ChevronDown, ScrollText } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { WORLD_CUP_2026_ROUNDS } from '../lib/matches';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../hooks/useAuth';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 const AVATARS = [
   "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
@@ -120,9 +121,15 @@ export function Header() {
                     >
                       <button 
                         onClick={() => { setShowAvatarSelector(true); setShowProfileMenu(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-[11px] font-black uppercase tracking-widest text-white/60 hover:text-primary transition-all"
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-[11px] font-black uppercase tracking-widest text-white/60 hover:text-primary transition-all border-b border-white/5"
                       >
                         <UserIcon size={14} /> Mudar Avatar
+                      </button>
+                      <button 
+                        onClick={() => { navigate('/regras'); setShowProfileMenu(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-[11px] font-black uppercase tracking-widest text-white/60 hover:text-primary transition-all border-b border-white/5"
+                      >
+                        <ScrollText size={14} /> Regras
                       </button>
                       <button 
                         onClick={() => signOut(auth)}

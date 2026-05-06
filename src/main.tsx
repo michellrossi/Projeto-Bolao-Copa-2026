@@ -8,6 +8,7 @@ import GroupsPage from './pages/GroupsPage';
 import TablePage from './pages/TablePage';
 import RankingPage from './pages/RankingPage';
 import UsersPage from './pages/UsersPage';
+import RulesPage from './pages/RulesPage';
 import { AuthProvider } from './hooks/useAuth';
 import './index.css';
 
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
       { path: '/grupos', element: <GroupsPage /> },
       { path: '/ranking', element: <RankingPage /> },
       { path: '/usuarios', element: <UsersPage /> },
+      { path: '/regras', element: <RulesPage /> },
     ],
   },
   {
