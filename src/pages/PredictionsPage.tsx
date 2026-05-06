@@ -71,7 +71,6 @@ export default function PredictionsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-white font-lexend tracking-tight uppercase mb-2">
@@ -82,21 +81,21 @@ export default function PredictionsPage() {
           </p>
         </div>
         
-        {/* Tabs / Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all whitespace-nowrap border ${
-              activeTab === tab 
-                ? 'bg-primary text-dark border-primary glow-primary' 
-                : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all whitespace-nowrap border ${
+                activeTab === tab 
+                  ? 'bg-primary text-dark border-primary glow-primary' 
+                  : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
@@ -108,7 +107,6 @@ export default function PredictionsPage() {
           className="grid gap-4 md:grid-cols-2"
         >
           {currentMatches.map((match, idx) => {
-            // Show phase title in Mata-Mata
             const showPhase = activeTab === "Mata-Mata" && (idx === 0 || currentMatches[idx-1].group !== match.group);
             
             return (
@@ -155,7 +153,6 @@ function MatchCard({ match, prediction, result, onSave }: any) {
       whileHover={!locked ? { y: -4 } : {}}
       className={`glass-dark p-6 rounded-[2rem] transition-all group relative overflow-hidden ${locked ? 'opacity-80' : 'hover:border-primary/30'}`}
     >
-      {/* Status Badges */}
       <div className="absolute top-0 right-0 flex items-center">
         {prediction && !result && (
           <div className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-bl-xl font-black text-[9px] uppercase tracking-widest flex items-center gap-1 border-l border-b border-white/5">
@@ -198,7 +195,6 @@ function MatchCard({ match, prediction, result, onSave }: any) {
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        {/* Home Team */}
         <div className="flex-1 flex flex-col items-center gap-3">
           <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-primary/20 transition-colors overflow-hidden">
             <img src={getFlagUrl(match.homeTeam)} alt={match.homeTeam} className="w-full h-full object-cover scale-110" />
@@ -223,7 +219,6 @@ function MatchCard({ match, prediction, result, onSave }: any) {
           )}
         </div>
 
-        {/* Away Team */}
         <div className="flex-1 flex flex-col items-center gap-3">
           <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-secondary/20 transition-colors overflow-hidden">
             <img src={getFlagUrl(match.awayTeam)} alt={match.awayTeam} className="w-full h-full object-cover scale-110" />
