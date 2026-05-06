@@ -303,6 +303,5 @@ function MatchCard({ match, prediction, result, onSave }: any) {
         )}
       </div>
     </motion.div>
-    </motion.div>
   );
 }
