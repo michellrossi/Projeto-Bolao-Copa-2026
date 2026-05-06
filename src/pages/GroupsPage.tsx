@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { WORLD_CUP_2026_GROUPS } from '../lib/groups';
 import { Users, ShieldCheck, TrendingUp } from 'lucide-react';
+import { getFlagUrl } from '../lib/flags';
 
 export default function GroupsPage() {
   return (
@@ -39,8 +40,12 @@ export default function GroupsPage() {
               {group.teams.map((team, tIndex) => (
                 <div key={team} className="flex items-center justify-between group/item">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:border-primary/30 transition-colors">
-                      <Users className="w-4 h-4 text-white/20 group-hover/item:text-primary transition-colors" />
+                    <div className="w-8 h-8 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:border-primary/30 transition-colors overflow-hidden">
+                      <img 
+                        src={getFlagUrl(team)} 
+                        alt={team} 
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <span className="font-bold text-white/80 group-hover/item:text-white transition-colors">{team}</span>
                   </div>
