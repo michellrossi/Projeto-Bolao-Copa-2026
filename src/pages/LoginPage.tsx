@@ -16,6 +16,7 @@ export function LoginPage() {
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
 
   useEffect(() => {
     // Process Google Redirect Result
@@ -31,14 +32,33 @@ export function LoginPage() {
         }, { merge: true });
         navigate('/palpites');
       }
+      setIsProcessingRedirect(false);
     }).catch((err) => {
       console.error("Redirect error:", err);
-      setError("Erro ao processar login com Google.");
+      setIsProcessingRedirect(false);
+      if (err.code !== 'auth/unauthorized-domain') {
+        setError("Erro ao processar login com Google.");
+      }
     });
   }, [navigate]);
 
-  if (authLoading) return null;
-  if (user) return <Navigate to="/" replace />;
+  // If user is already authenticated (picked up by useAuth), redirect immediately
+  useEffect(() => {
+    if (user && !isProcessingRedirect) {
+      navigate('/palpites');
+    }
+  }, [user, isProcessingRedirect, navigate]);
+
+  if (authLoading || isProcessingRedirect) {
+    return (
+      <div className="min-h-screen bg-dark flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        <p className="text-white/40 font-black uppercase tracking-widest text-xs">Autenticando na Arena...</p>
+      </div>
+    );
+  }
+
+  if (user) return <Navigate to="/palpites" replace />;
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -109,7 +129,7 @@ export function LoginPage() {
             animate={{ scale: 1, opacity: 1 }}
             className="flex flex-col items-center mb-8 text-center"
           >
-            <img src="https://iili.io/BZG2miP.png" alt="Bolão 2026" className="h-24 w-auto object-contain mb-4" />
+            <img src="https://iili.io/BZG2miP.png" alt="Bolão 2026" className="h-44 w-auto object-contain mb-4" />
             <h1 className="text-xl font-black text-white uppercase tracking-tight">
               {isRegistering ? 'Crie sua conta' : 'Bem-vindo de volta'}
             </h1>
