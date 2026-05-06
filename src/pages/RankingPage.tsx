@@ -208,7 +208,7 @@ export default function RankingPage() {
                           <TrendingDown size={10} /> Caiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 text-[9px] font-black text-white/20 uppercase">
+                        <div className="flex items-center gap-1 text-[9px] font-black text-white/50 uppercase">
                           <Minus size={10} /> Manteve posição
                         </div>
                       )}
@@ -218,7 +218,7 @@ export default function RankingPage() {
 
                 <div className="text-right">
                   <p className={`text-lg font-black ${isCurrentUser ? 'text-primary' : 'text-white'}`}>{player.points}</p>
-                  <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">Pontos</p>
+                  <p className="text-[8px] font-black text-white/60 uppercase tracking-widest">Pontos</p>
                 </div>
               </motion.div>
             );
