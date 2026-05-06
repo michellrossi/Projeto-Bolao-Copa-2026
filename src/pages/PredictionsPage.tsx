@@ -12,7 +12,7 @@ import { isMatchLocked, calculatePoints, getGroupStandings, getKnockoutTeam } fr
 const TABS = [...WORLD_CUP_2026_ROUNDS.map(r => r.name), "Mata-Mata"];
 
 export default function PredictionsPage() {
-  const { user } = useAuth();
+  const { user, isApproved } = useAuth();
   const [activeTab, setActiveTab] = useState("1ª Rodada");
   const [predictions, setPredictions] = useState<Record<string, { home: number; away: number }>>({});
   const [results, setResults] = useState<Record<string, { home: number; away: number }>>({});
@@ -49,7 +49,7 @@ export default function PredictionsPage() {
   }, [user]);
 
   const handleSavePrediction = async (matchId: string, home: number, away: number) => {
-    if (!user) return;
+    if (!user || !isApproved) return;
     try {
       const newPredictions = { ...predictions, [matchId]: { home, away } };
       await setDoc(doc(db, 'predictions', user.uid), { matches: newPredictions }, { merge: true });
@@ -59,6 +59,24 @@ export default function PredictionsPage() {
   };
 
   if (loading) return <div className="flex justify-center p-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
+
+  if (!isApproved) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center glass-dark rounded-[3rem] border-white/5 space-y-6 mt-10">
+        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center">
+          <ShieldCheck className="text-primary w-10 h-10" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Aguardando Aprovação</h2>
+          <p className="text-white/40 max-w-sm">Seu cadastro foi recebido! O administrador precisa aprovar sua participação para que você possa enviar palpites.</p>
+        </div>
+        <div className="px-6 py-3 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-2">
+          <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Status: Pendente</span>
+        </div>
+      </div>
+    );
+  }
 
   const currentMatches = activeTab === "Mata-Mata" 
     ? KNOCKOUT_MATCHES.map(m => ({

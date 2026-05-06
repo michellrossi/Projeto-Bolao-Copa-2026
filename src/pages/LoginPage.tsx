@@ -15,7 +15,18 @@ export function LoginPage() {
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Update/Create user record
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        lastLogin: new Date().toISOString()
+      }, { merge: true });
+
       navigate('/palpites');
     } catch (error) {
       console.error('Error signing in with Google', error);
