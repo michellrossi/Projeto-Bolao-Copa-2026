@@ -220,6 +220,3 @@ export function Header() {
     </>
   );
 }
-/header>
-  );
-}
