@@ -97,7 +97,7 @@ function ResultRow({ match, isAdmin, savedResult, onSave }: any) {
     <tr className="hover:bg-white/[0.02] transition-colors group">
       <td className="px-6 py-4">
         <div className="flex flex-col">
-          <span className="text-sm font-bold text-white/80">{new Date(match.date).toLocaleDateString('pt-BR')}</span>
+          <span className="text-sm font-bold text-white/80">{match.date.split('-').reverse().join('/')}</span>
           <span className="text-[10px] font-medium text-white/40 uppercase">{match.time}</span>
         </div>
       </td>

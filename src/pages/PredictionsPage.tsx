@@ -187,7 +187,7 @@ function MatchCard({ match, prediction, result, onSave }: any) {
         <div className="flex items-center gap-3 text-white/40 text-xs font-bold uppercase tracking-wider mr-20">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
-            {new Date(match.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+            {match.date.split('-').reverse().slice(0, 2).join('/')}
           </div>
           <div className="w-1 h-1 bg-white/20 rounded-full" />
           <div className="font-lexend text-white/60">{match.time}</div>
