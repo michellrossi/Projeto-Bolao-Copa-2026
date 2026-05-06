@@ -39,7 +39,7 @@ export default function TablePage() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-white font-lexend tracking-tight uppercase mb-2">
-            Tabela de <span className="text-primary italic">Resultados</span>
+            Tabela de <span className="text-primary">Resultados</span>
           </h1>
           <p className="text-white/50 font-medium">
             {isAdmin ? 'Área do Administrador: Insira os resultados oficiais.' : 'Acompanhe os resultados oficiais de cada partida.'}
@@ -190,7 +190,7 @@ function ResultRow({ match, isAdmin, savedResult, onSave }: any) {
             <img src={getFlagUrl(match.homeTeam)} className="w-8 h-5 object-cover rounded-sm shadow-sm" alt="" />
             <span className="text-[10px] font-bold text-white/60 text-center truncate w-full">{match.homeTeam}</span>
           </div>
-          <span className="text-white/20 font-black italic">VS</span>
+          <span className="text-white/20 font-black">VS</span>
           <div className="flex flex-col items-center gap-1 w-24">
             <img src={getFlagUrl(match.awayTeam)} className="w-8 h-5 object-cover rounded-sm shadow-sm" alt="" />
             <span className="text-[10px] font-bold text-white/60 text-center truncate w-full">{match.awayTeam}</span>

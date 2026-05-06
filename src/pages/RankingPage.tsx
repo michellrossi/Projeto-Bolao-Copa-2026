@@ -94,8 +94,8 @@ export default function RankingPage() {
     <div className="space-y-12 pb-20 animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-black text-primary font-lexend tracking-tighter uppercase italic">
-          Pódio dos <span className="text-white not-italic">Vencedores</span>
+        <h1 className="text-4xl font-black text-primary font-lexend tracking-tighter uppercase">
+          Pódio dos <span className="text-white">Vencedores</span>
         </h1>
         <p className="text-white/40 font-medium">Os melhores competidores da rodada</p>
       </div>
@@ -164,7 +164,7 @@ export default function RankingPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-end px-4">
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Classificação Geral</h2>
-          <span className="text-[10px] font-medium text-white/20 italic">Atualizado agora</span>
+          <span className="text-[10px] font-medium text-white/20">Atualizado agora</span>
         </div>
 
         <div className="space-y-3 px-2">

@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Here you would normally check a 'roles' collection or custom claim
         // For this demo, let's consider a specific email as admin or check a document
         const adminDoc = await getDoc(doc(db, 'admins', user.email || ''));
-        setIsAdmin(adminDoc.exists() || user.email === 'admin@bolao2026.com');
+        setIsAdmin(adminDoc.exists() || user.email === 'mionmic@gmail.com');
       } else {
         setIsAdmin(false);
       }

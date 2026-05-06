@@ -59,7 +59,7 @@ export function LoginPage() {
 
           <div className="text-center mb-10">
             <h1 className="text-4xl font-black text-white mb-3 font-lexend tracking-tight uppercase">
-              Bolão <span className="text-primary italic">2026</span>
+              Bolão <span className="text-primary">2026</span>
             </h1>
             <p className="text-white/60 font-medium">
               A maior arena de palpites do mundo espera por você.

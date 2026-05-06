@@ -74,7 +74,7 @@ export default function PredictionsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-white font-lexend tracking-tight uppercase mb-2">
-            Meus <span className="text-primary italic">Palpites</span>
+            Meus <span className="text-primary">Palpites</span>
           </h1>
           <p className="text-white/50 font-medium">
             Preencha seus palpites e suba no ranking da galera.
@@ -205,7 +205,7 @@ function MatchCard({ match, prediction, result, onSave }: any) {
         </div>
 
         <div className="flex flex-col items-center gap-1">
-          <div className="text-xl font-black text-white/20 italic">X</div>
+          <div className="text-xl font-black text-white/20">X</div>
           {result && (
             <div className="text-[10px] font-black text-primary uppercase bg-primary/10 px-2 py-0.5 rounded-md">
               {result.home} - {result.away}
