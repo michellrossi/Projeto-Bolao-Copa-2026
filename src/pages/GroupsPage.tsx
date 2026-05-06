@@ -92,12 +92,14 @@ export default function GroupsPage() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section */}
       <div className="space-y-4">
-        <h1 className="text-5xl font-black text-primary font-lexend tracking-tighter leading-tight">
-          Grupos do <br /> Mundial
-        </h1>
-        <p className="text-white/40 text-lg font-medium max-w-xs">
-          Acompanhe a classificação em tempo real das 48 seleções.
-        </p>
+        <div>
+          <h1 className="text-3xl font-black text-white font-lexend tracking-tight uppercase mb-2">
+            Grupos do <span className="text-primary">Mundial</span>
+          </h1>
+          <p className="text-white/50 font-medium">
+            Acompanhe a classificação em tempo real das 48 seleções.
+          </p>
+        </div>
         
         <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-3 rounded-2xl">
           <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
@@ -154,7 +156,7 @@ export default function GroupsPage() {
                       <div className="flex items-center gap-3 overflow-hidden">
                         <img 
                           src={getFlagUrl(team.name)} 
-                          className="w-6 h-4 object-cover rounded-sm flex-shrink-0" 
+                          className="w-6 h-4 object-cover rounded-sm flex-shrink-0 flag-3d" 
                           alt="" 
                         />
                         <span className="font-bold text-sm text-white truncate">{team.name}</span>

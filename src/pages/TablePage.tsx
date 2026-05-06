@@ -121,7 +121,7 @@ function ResultCard({ match, isAdmin, savedResult, onSave }: any) {
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 flex flex-col items-center gap-2">
-          <img src={getFlagUrl(match.homeTeam)} className="w-10 h-6 object-cover rounded shadow-sm" alt="" />
+          <img src={getFlagUrl(match.homeTeam)} className="w-10 h-6 object-cover rounded shadow-sm flag-3d" alt="" />
           <span className="text-xs font-bold text-white text-center line-clamp-1">{match.homeTeam}</span>
         </div>
         
@@ -148,7 +148,7 @@ function ResultCard({ match, isAdmin, savedResult, onSave }: any) {
         </div>
 
         <div className="flex-1 flex flex-col items-center gap-2">
-          <img src={getFlagUrl(match.awayTeam)} className="w-10 h-6 object-cover rounded shadow-sm" alt="" />
+          <img src={getFlagUrl(match.awayTeam)} className="w-10 h-6 object-cover rounded shadow-sm flag-3d" alt="" />
           <span className="text-xs font-bold text-white text-center line-clamp-1">{match.awayTeam}</span>
         </div>
       </div>
@@ -187,12 +187,12 @@ function ResultRow({ match, isAdmin, savedResult, onSave }: any) {
       <td className="px-6 py-4">
         <div className="flex items-center justify-center gap-4">
           <div className="flex flex-col items-center gap-1 w-24">
-            <img src={getFlagUrl(match.homeTeam)} className="w-8 h-5 object-cover rounded-sm shadow-sm" alt="" />
+            <img src={getFlagUrl(match.homeTeam)} className="w-8 h-5 object-cover rounded-sm shadow-sm flag-3d" alt="" />
             <span className="text-[10px] font-bold text-white/60 text-center truncate w-full">{match.homeTeam}</span>
           </div>
           <span className="text-white/20 font-black">VS</span>
           <div className="flex flex-col items-center gap-1 w-24">
-            <img src={getFlagUrl(match.awayTeam)} className="w-8 h-5 object-cover rounded-sm shadow-sm" alt="" />
+            <img src={getFlagUrl(match.awayTeam)} className="w-8 h-5 object-cover rounded-sm shadow-sm flag-3d" alt="" />
             <span className="text-[10px] font-bold text-white/60 text-center truncate w-full">{match.awayTeam}</span>
           </div>
         </div>

@@ -6,7 +6,7 @@
   --font-lexend: "Lexend", ui-sans-serif, system-ui, sans-serif;
   --font-outfit: "Outfit", ui-sans-serif, system-ui, sans-serif;
   
-  --color-primary: #00FF85;
+  --color-primary: #009440;
   --color-secondary: #FFE16D;
   --color-dark: #0A0F12;
   --color-dark-lighter: #161B1E;
@@ -34,7 +34,14 @@
   }
   
   .glow-primary {
-    box-shadow: 0 0 20px rgba(0, 255, 133, 0.2);
+    box-shadow: 0 0 20px rgba(0, 148, 64, 0.3);
+  }
+
+  .flag-3d {
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%);
   }
   
   .glow-secondary {

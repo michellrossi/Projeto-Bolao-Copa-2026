@@ -51,6 +51,6 @@ const TEAM_FLAGS: Record<string, string> = {
 
 export function getFlagUrl(teamName: string): string {
   const code = TEAM_FLAGS[teamName];
-  if (!code) return `https://flagcdn.com/w80/un.png`; // Fallback to UN flag
-  return `https://flagcdn.com/w80/${code}.png`;
+  if (!code) return `https://flagcdn.com/w160/un.png`;
+  return `https://flagcdn.com/w160/${code}.png`;
 }

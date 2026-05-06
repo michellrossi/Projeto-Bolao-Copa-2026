@@ -191,7 +191,7 @@ function MatchCard({ match, prediction, result, onSave }: any) {
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 flex flex-col items-center gap-3">
           <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-primary/20 transition-colors overflow-hidden">
-            <img src={getFlagUrl(match.homeTeam)} alt={match.homeTeam} className="w-full h-full object-cover scale-110" />
+            <img src={getFlagUrl(match.homeTeam)} alt={match.homeTeam} className="w-full h-full object-cover scale-110 flag-3d" />
           </div>
           <span className="text-sm font-bold text-center leading-tight min-h-[40px] flex items-center">{match.homeTeam}</span>
           <input 
@@ -215,7 +215,7 @@ function MatchCard({ match, prediction, result, onSave }: any) {
 
         <div className="flex-1 flex flex-col items-center gap-3">
           <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-secondary/20 transition-colors overflow-hidden">
-            <img src={getFlagUrl(match.awayTeam)} alt={match.awayTeam} className="w-full h-full object-cover scale-110" />
+            <img src={getFlagUrl(match.awayTeam)} alt={match.awayTeam} className="w-full h-full object-cover scale-110 flag-3d" />
           </div>
           <span className="text-sm font-bold text-center leading-tight min-h-[40px] flex items-center">{match.awayTeam}</span>
           <input 
