@@ -68,16 +68,7 @@ export default function RankingPage() {
         setLoading(false);
       } catch (error) {
         console.error("Error fetching rankings:", error);
-        // Fallback simulated data if permissions fail
-        setRankings([
-          { id: '1', name: 'Ana Beatriz', points: 156, trend: 'up', trendValue: 2, photo: 'https://i.pravatar.cc/150?u=ana' },
-          { id: '2', name: 'Ricardo S.', points: 142, trend: 'up', trendValue: 1, photo: 'https://i.pravatar.cc/150?u=ricardo' },
-          { id: '3', name: 'Lucas M.', points: 138, trend: 'down', trendValue: 1, photo: 'https://i.pravatar.cc/150?u=lucas' },
-          { id: '4', name: currentUser?.displayName || 'Você', points: 128, trend: 'stable', trendValue: 0, photo: currentUser?.photoURL || '' },
-          { id: '5', name: 'Marcos Vinícius', points: 121, trend: 'up', trendValue: 2, photo: 'https://i.pravatar.cc/150?u=marcos' },
-          { id: '6', name: 'Julia Mendes', points: 119, trend: 'down', trendValue: 1, photo: 'https://i.pravatar.cc/150?u=julia' },
-          { id: '7', name: 'Carlos Eduardo', points: 115, trend: 'stable', trendValue: 0, photo: 'https://i.pravatar.cc/150?u=carlos' },
-        ]);
+        setRankings([]);
         setLoading(false);
       }
     });
@@ -168,61 +159,67 @@ export default function RankingPage() {
         </div>
 
         <div className="space-y-3 px-2">
-          {rankings.map((player, index) => {
-            const isCurrentUser = player.id === currentUser?.uid;
-            return (
-              <motion.div
-                key={player.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`
-                  relative flex items-center justify-between p-4 rounded-2xl border transition-all
-                  ${isCurrentUser ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(0,255,133,0.1)]' : 'glass-dark border-white/5 hover:bg-white/[0.03]'}
-                `}
-              >
-                <div className="flex items-center gap-4">
-                  <span className={`w-8 text-sm font-black ${isCurrentUser ? 'text-primary' : 'text-white/40'}`}>
-                    {index + 1}º
-                  </span>
-                  <div className="relative">
-                    <img src={player.photo} className="w-10 h-10 rounded-full object-cover" alt="" />
-                    {isCurrentUser && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-dark" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-sm text-white">{player.name}</p>
+          {rankings.length > 0 ? (
+            rankings.map((player, index) => {
+              const isCurrentUser = player.id === currentUser?.uid;
+              return (
+                <motion.div
+                  key={player.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`
+                    relative flex items-center justify-between p-4 rounded-2xl border transition-all
+                    ${isCurrentUser ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(0,255,133,0.1)]' : 'glass-dark border-white/5 hover:bg-white/[0.03]'}
+                  `}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className={`w-8 text-sm font-black ${isCurrentUser ? 'text-primary' : 'text-white/40'}`}>
+                      {index + 1}º
+                    </span>
+                    <div className="relative">
+                      <img src={player.photo} className="w-10 h-10 rounded-full object-cover" alt="" />
                       {isCurrentUser && (
-                        <span className="text-[8px] font-black bg-primary text-dark px-1.5 py-0.5 rounded uppercase">Você</span>
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-dark" />
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      {player.trend === 'up' ? (
-                        <div className="flex items-center gap-1 text-[9px] font-black text-primary uppercase">
-                          <TrendingUp size={10} /> Subiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
-                        </div>
-                      ) : player.trend === 'down' ? (
-                        <div className="flex items-center gap-1 text-[9px] font-black text-red-500 uppercase">
-                          <TrendingDown size={10} /> Caiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 text-[9px] font-black text-white/50 uppercase">
-                          <Minus size={10} /> Manteve posição
-                        </div>
-                      )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-sm text-white">{player.name}</p>
+                        {isCurrentUser && (
+                          <span className="text-[8px] font-black bg-primary text-dark px-1.5 py-0.5 rounded uppercase">Você</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {player.trend === 'up' ? (
+                          <div className="flex items-center gap-1 text-[9px] font-black text-primary uppercase">
+                            <TrendingUp size={10} /> Subiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
+                          </div>
+                        ) : player.trend === 'down' ? (
+                          <div className="flex items-center gap-1 text-[9px] font-black text-red-500 uppercase">
+                            <TrendingDown size={10} /> Caiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-[9px] font-black text-white/50 uppercase">
+                            <Minus size={10} /> Manteve posição
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="text-right">
-                  <p className={`text-lg font-black ${isCurrentUser ? 'text-primary' : 'text-white'}`}>{player.points}</p>
-                  <p className="text-[8px] font-black text-white/60 uppercase tracking-widest">Pontos</p>
-                </div>
-              </motion.div>
-            );
-          })}
+                  <div className="text-right">
+                    <p className={`text-lg font-black ${isCurrentUser ? 'text-primary' : 'text-white'}`}>{player.points}</p>
+                    <p className="text-[8px] font-black text-white/60 uppercase tracking-widest">Pontos</p>
+                  </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            <div className="text-center py-20 glass-dark rounded-[3rem] border-white/5">
+              <p className="text-white/20 font-black uppercase tracking-widest">Nenhum palpite registrado ainda</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

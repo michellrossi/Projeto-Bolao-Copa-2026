@@ -6,7 +6,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="bg-dark text-white min-h-screen font-sans selection:bg-primary/30 selection:text-primary">
       <Header />
-      <main className="max-w-5xl mx-auto px-6 pb-40 pt-32">
+      <main className="max-w-5xl mx-auto px-6 pb-40 pt-24">
         {children}
       </main>
       <NavBar />
