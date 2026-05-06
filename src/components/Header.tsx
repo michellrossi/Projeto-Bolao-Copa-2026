@@ -24,6 +24,7 @@ const AVATARS = [
 ];
 
 export function Header() {
+  const navigate = useNavigate();
   const { user, isApproved, isAdmin } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
