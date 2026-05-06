@@ -1,33 +1,40 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WORLD_CUP_2026_ROUNDS } from '../lib/matches';
+import { KNOCKOUT_MATCHES } from '../lib/knockout';
 import { Calendar, Users, Trophy, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getFlagUrl } from '../lib/flags';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/firebase';
-import { doc, setDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
-import { isMatchLocked, calculatePoints } from '../lib/scoring';
+import { doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
+import { isMatchLocked, calculatePoints, getGroupStandings, getKnockoutTeam } from '../lib/scoring';
+
+const TABS = [...WORLD_CUP_2026_ROUNDS.map(r => r.name), "Mata-Mata"];
 
 export default function PredictionsPage() {
   const { user } = useAuth();
-  const [activeRoundIndex, setActiveRoundIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState("1ª Rodada");
   const [predictions, setPredictions] = useState<Record<string, { home: number; away: number }>>({});
   const [results, setResults] = useState<Record<string, { home: number; away: number }>>({});
   const [loading, setLoading] = useState(true);
 
-  const activeRound = WORLD_CUP_2026_ROUNDS[activeRoundIndex];
+  const activeRound = WORLD_CUP_2026_ROUNDS.find(r => r.name === activeTab);
+  const standings = getGroupStandings(
+    Object.entries(results).reduce((acc: any, [id, res]) => {
+      acc[id] = { homeScore: res.home, awayScore: res.away };
+      return acc;
+    }, {})
+  );
 
   useEffect(() => {
     if (!user) return;
 
-    // Listen to results
     const unsubResults = onSnapshot(collection(db, 'results'), (snapshot) => {
       const data: any = {};
       snapshot.forEach((doc) => data[doc.id] = doc.data());
       setResults(data);
     });
 
-    // Listen to user predictions
     const unsubPreds = onSnapshot(doc(db, 'predictions', user.uid), (doc) => {
       if (doc.exists()) {
         setPredictions(doc.data().matches || {});
@@ -43,12 +50,8 @@ export default function PredictionsPage() {
 
   const handleSavePrediction = async (matchId: string, home: number, away: number) => {
     if (!user) return;
-    
     try {
-      const newPredictions = {
-        ...predictions,
-        [matchId]: { home, away }
-      };
+      const newPredictions = { ...predictions, [matchId]: { home, away } };
       await setDoc(doc(db, 'predictions', user.uid), { matches: newPredictions }, { merge: true });
     } catch (error) {
       console.error("Error saving prediction:", error);
@@ -57,7 +60,14 @@ export default function PredictionsPage() {
 
   if (loading) return <div className="flex justify-center p-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
 
-  return (
+  const currentMatches = activeTab === "Mata-Mata" 
+    ? KNOCKOUT_MATCHES.map(m => ({
+        ...m,
+        homeTeam: getKnockoutTeam(standings, m.homePlaceholder, {} as any),
+        awayTeam: getKnockoutTeam(standings, m.awayPlaceholder, {} as any),
+        group: m.phase
+      }))
+    : activeRound?.matches || [];
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -70,49 +80,51 @@ export default function PredictionsPage() {
           </p>
         </div>
         
-        {/* Round Filter Tabs */}
-        <div className="flex p-1.5 glass rounded-2xl gap-1">
-          {WORLD_CUP_2026_ROUNDS.map((round, index) => (
-            <button
-              key={round.name}
-              onClick={() => setActiveRoundIndex(index)}
-              className={`
-                px-5 py-2.5 rounded-xl text-sm font-bold transition-all relative
-                ${activeRoundIndex === index ? 'text-dark' : 'text-white/60 hover:text-white hover:bg-white/5'}
-              `}
-            >
-              {activeRoundIndex === index && (
-                <motion.div 
-                  layoutId="activeTab"
-                  className="absolute inset-0 bg-primary rounded-xl -z-10"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-              )}
-              {round.name}
-            </button>
-          ))}
-        </div>
+        {/* Tabs / Filters */}
+      <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+        {TABS.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all whitespace-nowrap border ${
+              activeTab === tab 
+                ? 'bg-primary text-dark border-primary glow-primary' 
+                : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
-      {/* Matches Grid */}
       <AnimatePresence mode="wait">
-        <motion.div 
-          key={activeRound.name}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
           className="grid gap-4 md:grid-cols-2"
         >
-          {activeRound.matches.map((match) => (
-            <MatchCard 
-              key={match.id} 
-              match={match} 
-              prediction={predictions[match.id]}
-              result={results[match.id]}
-              onSave={handleSavePrediction}
-            />
-          ))}
+          {currentMatches.map((match, idx) => {
+            // Show phase title in Mata-Mata
+            const showPhase = activeTab === "Mata-Mata" && (idx === 0 || currentMatches[idx-1].group !== match.group);
+            
+            return (
+              <div key={match.id} className={showPhase ? "md:col-span-2 space-y-4" : ""}>
+                {showPhase && (
+                  <h3 className="text-xl font-black text-secondary font-lexend uppercase tracking-tight mt-6 border-l-4 border-secondary pl-4">
+                    {match.group}
+                  </h3>
+                )}
+                <MatchCard 
+                  match={match} 
+                  prediction={predictions[match.id]}
+                  result={results[match.id]}
+                  onSave={handleSavePrediction}
+                />
+              </div>
+            );
+          })}
         </motion.div>
       </AnimatePresence>
     </div>
