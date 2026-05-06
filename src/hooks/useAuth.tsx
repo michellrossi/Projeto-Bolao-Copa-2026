@@ -20,40 +20,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        // Check Admin
-        const adminDoc = await getDoc(doc(db, 'admins', user.email || ''));
-        const isAdminUser = adminDoc.exists() || user.email === 'mionmic@gmail.com';
-        setIsAdmin(isAdminUser);
+      try {
+        setUser(user);
+        if (user) {
+          // Check Admin
+          const adminDoc = await getDoc(doc(db, 'admins', user.email || ''));
+          const isAdminUser = adminDoc.exists() || user.email === 'mionmic@gmail.com';
+          setIsAdmin(isAdminUser);
 
-        // Check Approval (Admins are always approved)
-        if (isAdminUser) {
-          setIsApproved(true);
-        } else {
-          const userRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userRef);
-          
-          if (!userDoc.exists()) {
-            // Auto-create missing user document for those already logged in
-            await setDoc(userRef, {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-              lastLogin: new Date().toISOString(),
-              approved: false
-            });
-            setIsApproved(false);
+          // Check Approval (Admins are always approved)
+          if (isAdminUser) {
+            setIsApproved(true);
           } else {
-            setIsApproved(userDoc.data()?.approved === true);
+            const userRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userRef);
+            
+            if (!userDoc.exists()) {
+              // Auto-create missing user document
+              await setDoc(userRef, {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName || user.email?.split('@')[0],
+                photoURL: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+                lastLogin: new Date().toISOString(),
+                approved: false
+              });
+              setIsApproved(false);
+            } else {
+              setIsApproved(userDoc.data()?.approved === true);
+            }
           }
+        } else {
+          setIsAdmin(false);
+          setIsApproved(false);
         }
-      } else {
-        setIsAdmin(false);
-        setIsApproved(false);
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
   }, []);
 

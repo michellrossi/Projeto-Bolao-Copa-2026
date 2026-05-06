@@ -19,32 +19,37 @@ export function LoginPage() {
   const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
 
   useEffect(() => {
-    // Process Google Redirect Result
-    getRedirectResult(auth).then(async (result) => {
-      if (result?.user) {
-        const u = result.user;
-        await setDoc(doc(db, 'users', u.uid), {
-          uid: u.uid,
-          email: u.email,
-          displayName: u.displayName,
-          photoURL: u.photoURL,
-          lastLogin: new Date().toISOString()
-        }, { merge: true });
-        navigate('/palpites');
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          const u = result.user;
+          await setDoc(doc(db, 'users', u.uid), {
+            uid: u.uid,
+            email: u.email,
+            displayName: u.displayName || u.email?.split('@')[0],
+            photoURL: u.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.uid}`,
+            lastLogin: new Date().toISOString()
+          }, { merge: true });
+          navigate('/palpites');
+        }
+      } catch (err: any) {
+        console.error("Redirect check error:", err);
+        if (err.code !== 'auth/unauthorized-domain') {
+          setError("Erro ao processar login. Tente novamente.");
+        }
+      } finally {
+        setIsProcessingRedirect(false);
       }
-      setIsProcessingRedirect(false);
-    }).catch((err) => {
-      console.error("Redirect error:", err);
-      setIsProcessingRedirect(false);
-      if (err.code !== 'auth/unauthorized-domain') {
-        setError("Erro ao processar login com Google.");
-      }
-    });
+    };
+
+    checkRedirect();
   }, [navigate]);
 
-  // If user is already authenticated (picked up by useAuth), redirect immediately
+  // Priority redirect if user is already detected
   useEffect(() => {
     if (user && !isProcessingRedirect) {
+      console.log("User detected, navigating to palpites");
       navigate('/palpites');
     }
   }, [user, isProcessingRedirect, navigate]);
@@ -53,7 +58,7 @@ export function LoginPage() {
     return (
       <div className="min-h-screen bg-dark flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="text-white/40 font-black uppercase tracking-widest text-xs">Autenticando na Arena...</p>
+        <p className="text-white/40 font-black uppercase tracking-widest text-xs">Sincronizando com a Arena...</p>
       </div>
     );
   }
@@ -62,11 +67,30 @@ export function LoginPage() {
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
     try {
-      await signInWithRedirect(auth, provider);
-    } catch (error) {
-      console.error('Error signing in with Google', error);
-      setError("Não foi possível iniciar o login com Google.");
+      // Try Popup first as it's more reliable on modern browsers
+      const result = await signInWithPopup(auth, provider);
+      if (result.user) {
+        const u = result.user;
+        await setDoc(doc(db, 'users', u.uid), {
+          uid: u.uid,
+          email: u.email,
+          displayName: u.displayName || u.email?.split('@')[0],
+          photoURL: u.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.uid}`,
+          lastLogin: new Date().toISOString()
+        }, { merge: true });
+        navigate('/palpites');
+      }
+    } catch (err: any) {
+      console.error('Popup error, trying redirect...', err);
+      // Fallback to redirect if popup is blocked (common on mobile)
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+        await signInWithRedirect(auth, provider);
+      } else {
+        setError("Não foi possível abrir a janela de login.");
+      }
     }
   };
 
