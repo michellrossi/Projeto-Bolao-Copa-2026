@@ -14,19 +14,19 @@
 
 @layer base {
   body {
-    @apply bg-dark text-white font-sans antialiased;
-    background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 133, 0.05) 0%, transparent 50%),
-                      radial-gradient(circle at 100% 100%, rgba(255, 225, 109, 0.03) 0%, transparent 50%);
+    @apply bg-[#05080a] text-white font-sans antialiased;
+    background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 133, 0.08) 0%, transparent 50%),
+                      radial-gradient(circle at 100% 100%, rgba(255, 225, 109, 0.05) 0%, transparent 50%);
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
   }
   
   .glass-dark {
-    @apply bg-black/40 backdrop-blur-2xl border border-white/5;
+    @apply bg-[#12181b]/80 backdrop-blur-2xl border border-white/10 shadow-2xl;
   }
   
   .text-gradient {
