@@ -68,7 +68,7 @@ export function LoginPage() {
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    
+
     try {
       // Try Popup first as it's more reliable on modern browsers
       const result = await signInWithPopup(auth, provider);
@@ -119,10 +119,10 @@ export function LoginPage() {
       navigate('/palpites');
     } catch (err: any) {
       console.error("Auth error:", err);
-      setError(err.code === 'auth/user-not-found' ? 'Usuário não encontrado.' : 
-             err.code === 'auth/wrong-password' ? 'Senha incorreta.' : 
-             err.code === 'auth/email-already-in-use' ? 'E-mail já cadastrado.' : 
-             'Erro ao autenticar. Verifique seus dados.');
+      setError(err.code === 'auth/user-not-found' ? 'Usuário não encontrado.' :
+        err.code === 'auth/wrong-password' ? 'Senha incorreta.' :
+          err.code === 'auth/email-already-in-use' ? 'E-mail já cadastrado.' :
+            'Erro ao autenticar. Verifique seus dados.');
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ export function LoginPage() {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden font-sans bg-dark">
-      <div 
+      <div
         className="absolute inset-0 z-0 scale-105"
         style={{
           backgroundImage: 'url("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80")',
@@ -139,23 +139,23 @@ export function LoginPage() {
           filter: 'brightness(0.2) saturate(0.5)'
         }}
       />
-      
+
       <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent z-[1]" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-md px-6 py-12"
       >
         <div className="glass-dark p-8 md:p-10 rounded-[3rem] shadow-2xl flex flex-col items-center border border-white/5">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="flex flex-col items-center mb-8 text-center"
           >
             <img src="https://iili.io/BZG2miP.png" alt="Bolão 2026" className="h-44 w-auto object-contain mb-4" />
             <h1 className="text-xl font-black text-white uppercase tracking-tight">
-              {isRegistering ? 'Crie sua conta' : 'Bem-vindo de volta'}
+              {isRegistering ? 'Crie sua conta' : 'Bem-vindo ao MestreCopa'}
             </h1>
             <p className="text-white/40 text-xs font-medium mt-1">
               {isRegistering ? 'Junte-se à maior arena de palpites' : 'Sua arena de palpites te espera'}
@@ -163,7 +163,7 @@ export function LoginPage() {
           </motion.div>
 
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="w-full mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-xs font-bold text-center"
@@ -182,7 +182,7 @@ export function LoginPage() {
                 >
                   <div className="relative">
                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                    <input 
+                    <input
                       type="text"
                       placeholder="Seu nome"
                       value={displayName}
@@ -197,7 +197,7 @@ export function LoginPage() {
 
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-              <input 
+              <input
                 type="email"
                 placeholder="E-mail"
                 value={email}
@@ -209,7 +209,7 @@ export function LoginPage() {
 
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-              <input 
+              <input
                 type="password"
                 placeholder="Senha"
                 value={password}
@@ -219,7 +219,7 @@ export function LoginPage() {
               />
             </div>
 
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               disabled={loading}
@@ -242,7 +242,7 @@ export function LoginPage() {
               <div className="h-[1px] flex-1 bg-white/5" />
             </div>
 
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               type="button"
@@ -259,7 +259,7 @@ export function LoginPage() {
             </motion.button>
           </div>
 
-          <button 
+          <button
             onClick={() => setIsRegistering(!isRegistering)}
             className="mt-8 text-white/40 hover:text-primary transition-colors text-xs font-bold"
           >

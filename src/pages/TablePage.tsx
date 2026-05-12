@@ -70,8 +70,7 @@ export default function TablePage() {
             <thead>
               <tr className="bg-white/5">
                 <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40">Data/Hora</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Jogo</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Placar Oficial</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Confronto & Placar Oficial</th>
                 {isAdmin && <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Ação</th>}
               </tr>
             </thead>
@@ -201,43 +200,42 @@ function ResultRow({ match, isAdmin, savedResult, onSave, onReset }: any) {
         </div>
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-6">
           <div className="flex flex-col items-center gap-1 w-24">
             <img src={getFlagUrl(match.homeTeam)} className="w-8 h-5 object-cover rounded-sm shadow-sm flag-3d" alt="" />
             <span className="text-[10px] font-bold text-white/60 text-center truncate w-full">{match.homeTeam}</span>
           </div>
-          <span className="text-white/20 font-black">VS</span>
+
+          <div className="flex items-center gap-2">
+            {isAdmin ? (
+              <>
+                <input 
+                  type="number" 
+                  value={home} 
+                  onChange={(e) => setHome(e.target.value)}
+                  className="w-10 h-9 bg-black/40 border border-white/10 rounded-lg text-center font-black focus:border-primary transition-all text-white text-sm"
+                />
+                <span className="text-white/20">-</span>
+                <input 
+                  type="number" 
+                  value={away} 
+                  onChange={(e) => setAway(e.target.value)}
+                  className="w-10 h-9 bg-black/40 border border-white/10 rounded-lg text-center font-black focus:border-primary transition-all text-white text-sm"
+                />
+              </>
+            ) : (
+              <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                <span className="text-base font-black text-white">{savedResult?.home ?? '-'}</span>
+                <span className="text-white/20">-</span>
+                <span className="text-base font-black text-white">{savedResult?.away ?? '-'}</span>
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-col items-center gap-1 w-24">
             <img src={getFlagUrl(match.awayTeam)} className="w-8 h-5 object-cover rounded-sm shadow-sm flag-3d" alt="" />
             <span className="text-[10px] font-bold text-white/60 text-center truncate w-full">{match.awayTeam}</span>
           </div>
-        </div>
-      </td>
-      <td className="px-6 py-4">
-        <div className="flex justify-center gap-2">
-          {isAdmin ? (
-            <>
-              <input 
-                type="number" 
-                value={home} 
-                onChange={(e) => setHome(e.target.value)}
-                className="w-12 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black focus:border-primary transition-all text-white"
-              />
-              <span className="flex items-center text-white/20">-</span>
-              <input 
-                type="number" 
-                value={away} 
-                onChange={(e) => setAway(e.target.value)}
-                className="w-12 h-10 bg-black/40 border border-white/10 rounded-lg text-center font-black focus:border-primary transition-all text-white"
-              />
-            </>
-          ) : (
-            <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
-              <span className="text-xl font-black text-white">{savedResult?.home ?? '-'}</span>
-              <span className="text-white/20">-</span>
-              <span className="text-xl font-black text-white">{savedResult?.away ?? '-'}</span>
-            </div>
-          )}
         </div>
       </td>
       {isAdmin && (

@@ -128,9 +128,9 @@ export default function PredictionsPage() {
             const showPhase = activeTab === "Mata-Mata" && (idx === 0 || currentMatches[idx-1].group !== match.group);
             
             return (
-              <div key={match.id} className={showPhase ? "md:col-span-2 space-y-4" : ""}>
+              <div key={match.id} className="contents">
                 {showPhase && (
-                  <h3 className="text-xl font-black text-secondary font-lexend uppercase tracking-tight mt-6 border-l-4 border-secondary pl-4">
+                  <h3 className="md:col-span-2 text-xl font-black text-secondary font-lexend uppercase tracking-tight mt-6 border-l-4 border-secondary pl-4">
                     {match.group}
                   </h3>
                 )}
