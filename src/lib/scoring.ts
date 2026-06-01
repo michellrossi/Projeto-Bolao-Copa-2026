@@ -1,5 +1,6 @@
 import { WORLD_CUP_2026_ROUNDS, Match } from './matches';
 import { WORLD_CUP_2026_GROUPS } from './groups';
+import { KNOCKOUT_MATCHES } from './knockout';
 
 export interface GameResult {
   homeScore: number;
@@ -106,7 +107,7 @@ export function getGroupStandings(results: Record<string, GameResult>) {
 export function getKnockoutTeam(
   standings: Record<string, TeamStats[]>, 
   placeholder: string,
-  results: Record<string, GameResult>
+  results: Record<string, any>
 ): string {
   // Case 1: Xº do Grupo Y
   const groupMatch = placeholder.match(/(\d)º do Grupo ([A-L])/);
@@ -117,7 +118,6 @@ export function getKnockoutTeam(
   }
 
   // Case 2: 3º do Grupo (X, Y, Z...)
-  // For simplicity in this Bolão, let's just pick the best 3rd from the listed groups
   if (placeholder.includes('3º do Grupo')) {
     const groupsMatch = placeholder.match(/\(([A-L, ]+)\)/);
     if (groupsMatch) {
@@ -135,7 +135,60 @@ export function getKnockoutTeam(
   }
 
   // Case 3: Vencedor Jogo X
-  // Case 4: Perdedor Semi X
-  // This would require recursive resolving. For now, we return the placeholder.
+  if (placeholder.startsWith('Vencedor Jogo ') || placeholder.startsWith('Vencedor ')) {
+    const parentMatchId = placeholder.replace('Vencedor Jogo ', '').replace('Vencedor ', '').trim();
+    const parentMatch = KNOCKOUT_MATCHES.find(m => m.id === parentMatchId);
+    if (!parentMatch) return placeholder;
+
+    // Recursively get the teams for the parent match
+    const parentHome = getKnockoutTeam(standings, parentMatch.homePlaceholder, results);
+    const parentAway = getKnockoutTeam(standings, parentMatch.awayPlaceholder, results);
+
+    const scoreData = results[parentMatchId];
+    if (!scoreData) return placeholder;
+    
+    // Normalize score (handles both { homeScore, awayScore } and { home, away })
+    const home = scoreData.home !== undefined ? scoreData.home : scoreData.homeScore;
+    const away = scoreData.away !== undefined ? scoreData.away : scoreData.awayScore;
+    if (home === undefined || away === undefined || home === '' || away === '') return placeholder;
+
+    const h = Number(home);
+    const a = Number(away);
+    
+    if (h > a) return parentHome;
+    if (a > h) return parentAway;
+    if (h === a) {
+      if (scoreData.qualifier === 'away') return parentAway;
+      return parentHome; // Default to home in case of draw and no qualifier
+    }
+  }
+
+  // Case 4: Perdedor S1, Perdedor S2
+  if (placeholder.startsWith('Perdedor ')) {
+    const parentMatchId = placeholder.replace('Perdedor ', '').trim();
+    const parentMatch = KNOCKOUT_MATCHES.find(m => m.id === parentMatchId);
+    if (!parentMatch) return placeholder;
+
+    const parentHome = getKnockoutTeam(standings, parentMatch.homePlaceholder, results);
+    const parentAway = getKnockoutTeam(standings, parentMatch.awayPlaceholder, results);
+
+    const scoreData = results[parentMatchId];
+    if (!scoreData) return placeholder;
+
+    const home = scoreData.home !== undefined ? scoreData.home : scoreData.homeScore;
+    const away = scoreData.away !== undefined ? scoreData.away : scoreData.awayScore;
+    if (home === undefined || away === undefined || home === '' || away === '') return placeholder;
+
+    const h = Number(home);
+    const a = Number(away);
+
+    if (h > a) return parentAway;
+    if (a > h) return parentHome;
+    if (h === a) {
+      if (scoreData.qualifier === 'away') return parentHome;
+      return parentAway; // Default to away in case of draw and no qualifier
+    }
+  }
+
   return placeholder;
 }
