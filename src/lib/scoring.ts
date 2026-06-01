@@ -38,6 +38,30 @@ export function isMatchLocked(matchDate: string, matchTime: string): boolean {
   const matchDateTime = new Date(`${matchDate}T${matchTime}`);
   const now = new Date();
   const LOCK_TIME = 30 * 60 * 1000;
+
+  // Verifica dinamicamente se a partida pertence à fase de grupos (Rodada 1, 2 ou 3)
+  const isGroupMatch = WORLD_CUP_2026_ROUNDS.some(round => 
+    round.matches.some(m => m.date === matchDate && m.time === matchTime)
+  );
+
+  if (isGroupMatch) {
+    // Para partidas da fase de grupos, todas travam 30 minutos antes do PRIMEIRO jogo da Copa
+    let firstMatchDateTime: Date | null = null;
+    WORLD_CUP_2026_ROUNDS.forEach(round => {
+      round.matches.forEach(m => {
+        const dt = new Date(`${m.date}T${m.time}`);
+        if (!firstMatchDateTime || dt < firstMatchDateTime) {
+          firstMatchDateTime = dt;
+        }
+      });
+    });
+
+    if (firstMatchDateTime) {
+      return (firstMatchDateTime.getTime() - now.getTime()) <= LOCK_TIME;
+    }
+  }
+
+  // Partidas do mata-mata travam individualmente 30 minutos antes do seu próprio início
   return (matchDateTime.getTime() - now.getTime()) <= LOCK_TIME;
 }
 
