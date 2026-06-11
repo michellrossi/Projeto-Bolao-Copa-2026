@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../lib/firebase';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
-import { UserCheck, UserX, ShieldCheck, Mail, Calendar, Search, Trophy } from 'lucide-react';
+import { UserCheck, UserX, ShieldCheck, Mail, Calendar, Search, Trophy, Trash2 } from 'lucide-react';
 
 interface UserData {
   uid: string;
@@ -30,8 +30,8 @@ export default function UsersPage() {
         const userData = doc.data() as UserData;
         data.push(userData);
       });
-      // Sort handling missing lastLogin
-      data.sort((a, b) => (b.lastLogin || '').localeCompare(a.lastLogin || ''));
+      // Sort alphabetically by displayName
+      data.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
       setUsers(data);
       setLoading(false);
     }, (error) => {
@@ -72,6 +72,16 @@ export default function UsersPage() {
       });
     } catch (error) {
       console.error("Error updating approval:", error);
+    }
+  };
+
+  const handleDeleteUser = async (uid: string, displayName: string) => {
+    if (!confirm(`Tem certeza que deseja excluir permanentemente o participante "${displayName}"? Esta ação não pode ser desfeita e apagará todas as suas apostas.`)) return;
+    try {
+      await deleteDoc(doc(db, 'users', uid));
+      await deleteDoc(doc(db, 'predictions', uid));
+    } catch (error) {
+      console.error("Error deleting user:", error);
     }
   };
 
@@ -144,28 +154,40 @@ export default function UsersPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => handleToggleApproval(user.uid, user.approved || false)}
-                className={`
-                  flex flex-col items-center justify-center gap-1 w-24 h-24 rounded-2xl transition-all font-black text-[9px] uppercase tracking-widest border
-                  ${user.approved 
-                    ? 'bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white' 
-                    : 'bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-dark'
-                  }
-                `}
-              >
-                {user.approved ? (
-                  <>
-                    <UserX size={20} />
-                    Bloquear
-                  </>
-                ) : (
-                  <>
-                    <UserCheck size={20} />
-                    Aprovar
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => handleToggleApproval(user.uid, user.approved || false)}
+                  className={`
+                    flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-2xl transition-all font-black text-[9px] uppercase tracking-widest border
+                    ${user.approved 
+                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500 hover:text-dark' 
+                      : 'bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-dark'
+                    }
+                  `}
+                  title={user.approved ? "Bloquear participante" : "Aprovar participante"}
+                >
+                  {user.approved ? (
+                    <>
+                      <UserX size={16} />
+                      Bloquear
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck size={16} />
+                      Aprovar
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleDeleteUser(user.uid, user.displayName)}
+                  className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-2xl transition-all font-black text-[9px] uppercase tracking-widest border bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white"
+                  title="Excluir participante permanentemente"
+                >
+                  <Trash2 size={16} />
+                  Excluir
+                </button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
