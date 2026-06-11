@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WORLD_CUP_2026_ROUNDS } from '../lib/matches';
 import { KNOCKOUT_MATCHES } from '../lib/knockout';
-import { Calendar, Users, Trophy, Lock, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Calendar, Users, Trophy, Lock, CheckCircle2, AlertCircle, ShieldCheck, Save } from 'lucide-react';
 import { getFlagUrl } from '../lib/flags';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/firebase';
@@ -165,27 +165,49 @@ export default function PredictionsPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="grid gap-4 md:grid-cols-2"
+            className="space-y-4"
           >
-            {currentMatches.map((match, idx) => {
-              const showPhase = activeTab === "Mata-Mata" && (idx === 0 || currentMatches[idx-1].group !== match.group);
-              
-              return (
-                <div key={match.id} className="contents">
-                  {showPhase && (
-                    <h3 className="md:col-span-2 text-xl font-black text-secondary font-lexend uppercase tracking-tight mt-6 border-l-4 border-secondary pl-4">
-                      {match.group}
-                    </h3>
-                  )}
-                  <MatchCard 
-                    match={match} 
-                    prediction={predictions[match.id]}
-                    result={results[match.id]}
-                    onSave={handleSavePrediction}
-                  />
-                </div>
-              );
-            })}
+            {/* Desktop Table View */}
+            <div className="hidden md:block glass-dark rounded-[2.5rem] overflow-hidden border-white/5">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-white/5">
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40">Data/Hora</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40">Fase/Grupo</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Confronto & Meu Palpite</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Placar Oficial</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Pontos</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Ação</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {currentMatches.map((match) => (
+                    <PredictionRow 
+                      key={match.id} 
+                      match={match} 
+                      prediction={predictions[match.id]}
+                      result={results[match.id]}
+                      onSave={handleSavePrediction}
+                      isKnockout={activeTab === "Mata-Mata"}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="md:hidden space-y-4">
+              {currentMatches.map((match) => (
+                <PredictionCard
+                  key={match.id}
+                  match={match}
+                  prediction={predictions[match.id]}
+                  result={results[match.id]}
+                  onSave={handleSavePrediction}
+                  isKnockout={activeTab === "Mata-Mata"}
+                />
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -193,155 +215,410 @@ export default function PredictionsPage() {
   );
 }
 
-function MatchCard({ match, prediction, result, onSave }: any) {
+function PredictionRow({ match, prediction, result, onSave, isKnockout }: any) {
   const [home, setHome] = useState(prediction?.home ?? '');
   const [away, setAway] = useState(prediction?.away ?? '');
+  const [qualifier, setQualifier] = useState<'home' | 'away' | undefined>(prediction?.qualifier);
   const locked = isMatchLocked(match.date, match.time);
-  
+
   useEffect(() => {
-    if (prediction) {
-      setHome(prediction.home);
-      setAway(prediction.away);
-    }
+    setHome(prediction?.home ?? '');
+    setAway(prediction?.away ?? '');
+    setQualifier(prediction?.qualifier);
   }, [prediction]);
+
+  const hasChanged = prediction 
+    ? (prediction.home !== (home === '' ? '' : Number(home)) || prediction.away !== (away === '' ? '' : Number(away)) || prediction.qualifier !== qualifier)
+    : (home !== '' || away !== '');
+
+  const handleSave = () => {
+    if (locked) return;
+    if (home === '' || away === '') return;
+    onSave(match.id, home, away, qualifier);
+  };
+
+  const handleBlur = () => {
+    if (locked) return;
+    if (home !== '' && away !== '') {
+      let q = qualifier;
+      if (Number(home) !== Number(away)) {
+        q = undefined;
+        setQualifier(undefined);
+      } else if (!q) {
+        q = 'home';
+        setQualifier('home');
+      }
+      onSave(match.id, home, away, q);
+    }
+  };
+
+  const handleSelectQualifier = (side: 'home' | 'away') => {
+    if (locked) return;
+    setQualifier(side);
+    if (home !== '' && away !== '') {
+      onSave(match.id, home, away, side);
+    }
+  };
 
   const points = result && prediction ? calculatePoints(
     { homeScore: Number(prediction.home), awayScore: Number(prediction.away) },
     { homeScore: result.home, awayScore: result.away }
   ) : null;
 
+  const isHomePlaceholder = !match.homeTeam || match.homeTeam.startsWith('2º') || match.homeTeam.startsWith('1º') || match.homeTeam.startsWith('3º') || match.homeTeam.startsWith('Vencedor') || match.homeTeam.startsWith('Perdedor');
+  const isAwayPlaceholder = !match.awayTeam || match.awayTeam.startsWith('2º') || match.awayTeam.startsWith('1º') || match.awayTeam.startsWith('3º') || match.awayTeam.startsWith('Vencedor') || match.awayTeam.startsWith('Perdedor');
+
+  const showQualifier = home !== '' && away !== '' && Number(home) === Number(away) && isKnockout;
+
   return (
-    <motion.div 
-      whileHover={!locked ? { y: -4 } : {}}
-      className={`glass-dark p-6 rounded-[2rem] transition-all group relative overflow-hidden ${locked ? 'opacity-80' : 'hover:border-primary/30'}`}
-    >
-      {/* Top Status Bar */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
-          <span className="text-[10px] font-black uppercase tracking-widest text-primary">Grupo {match.group}</span>
+    <tr className={`hover:bg-white/[0.01] transition-colors group ${locked ? 'opacity-80' : ''}`}>
+      {/* Data/Hora */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-white/80">{match.date.split('-').reverse().slice(0, 2).join('/')}</span>
+          <span className="text-[10px] font-medium text-white/40 uppercase">{match.time}</span>
         </div>
-        
-        <div className="flex items-center gap-2">
+      </td>
+
+      {/* Fase/Grupo */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full">
+          {match.group}
+        </span>
+      </td>
+
+      {/* Confronto & Palpite */}
+      <td className="px-6 py-4">
+        <div className="flex items-center justify-center gap-4">
+          {/* Time Casa */}
+          <div className="flex items-center gap-2 justify-end w-40 text-right">
+            <span className={`text-xs font-bold text-white/80 truncate ${qualifier === 'home' ? 'text-secondary font-black' : ''}`}>
+              {match.homeTeam}
+            </span>
+            {isHomePlaceholder ? (
+              <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-black text-white/30 shrink-0">?</div>
+            ) : (
+              <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 relative flag-3d flex items-center justify-center shrink-0">
+                <img src={getFlagUrl(match.homeTeam)} className="w-full h-full object-cover scale-110" alt="" />
+              </div>
+            )}
+          </div>
+
+          {/* Inputs de Palpites */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {showQualifier && (
+              <button 
+                onClick={() => handleSelectQualifier('home')}
+                className={`p-1 rounded transition-all ${qualifier === 'home' ? 'text-secondary animate-pulse bg-secondary/10' : 'text-white/10 hover:text-white/40'}`}
+                disabled={locked}
+                title="Classificar time da casa"
+              >
+                <Trophy size={12} className={qualifier === 'home' ? 'fill-secondary' : ''} />
+              </button>
+            )}
+            <input 
+              type="number"
+              value={home}
+              onChange={(e) => setHome(e.target.value)}
+              onBlur={handleBlur}
+              disabled={locked}
+              placeholder="-"
+              className={`w-10 h-10 bg-black/40 border border-white/10 rounded-xl text-center font-black text-sm text-white focus:outline-none transition-all ${
+                locked ? 'opacity-50 cursor-not-allowed border-none' : 'focus:border-primary focus:ring-2 focus:ring-primary/10'
+              }`}
+            />
+            <span className="text-white/20 font-lexend text-xs">x</span>
+            <input 
+              type="number"
+              value={away}
+              onChange={(e) => setAway(e.target.value)}
+              onBlur={handleBlur}
+              disabled={locked}
+              placeholder="-"
+              className={`w-10 h-10 bg-black/40 border border-white/10 rounded-xl text-center font-black text-sm text-white focus:outline-none transition-all ${
+                locked ? 'opacity-50 cursor-not-allowed border-none' : 'focus:border-primary focus:ring-2 focus:ring-primary/10'
+              }`}
+            />
+            {showQualifier && (
+              <button 
+                onClick={() => handleSelectQualifier('away')}
+                className={`p-1 rounded transition-all ${qualifier === 'away' ? 'text-secondary animate-pulse bg-secondary/10' : 'text-white/10 hover:text-white/40'}`}
+                disabled={locked}
+                title="Classificar time de fora"
+              >
+                <Trophy size={12} className={qualifier === 'away' ? 'fill-secondary' : ''} />
+              </button>
+            )}
+          </div>
+
+          {/* Time Fora */}
+          <div className="flex items-center gap-2 justify-start w-40 text-left">
+            {isAwayPlaceholder ? (
+              <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-black text-white/30 shrink-0">?</div>
+            ) : (
+              <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 relative flag-3d flex items-center justify-center shrink-0">
+                <img src={getFlagUrl(match.awayTeam)} className="w-full h-full object-cover scale-110" alt="" />
+              </div>
+            )}
+            <span className={`text-xs font-bold text-white/80 truncate ${qualifier === 'away' ? 'text-secondary font-black' : ''}`}>
+              {match.awayTeam}
+            </span>
+          </div>
+        </div>
+      </td>
+
+      {/* Placar Oficial */}
+      <td className="px-6 py-4 text-center whitespace-nowrap">
+        {result ? (
+          <div className="inline-flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+            <span className="text-xs font-black text-white">{result.home}</span>
+            <span className="text-white/20">-</span>
+            <span className="text-xs font-black text-white">{result.away}</span>
+            {result.qualifier && (
+              <span className="text-[8px] font-black text-secondary uppercase bg-secondary/10 px-1 rounded">
+                {result.qualifier === 'home' ? 'H' : 'A'}
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-white/20 text-xs">-</span>
+        )}
+      </td>
+
+      {/* Pontos */}
+      <td className="px-6 py-4 text-center whitespace-nowrap">
+        {points !== null ? (
+          <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest ${
+            points === 3 ? 'bg-primary text-dark shadow-[0_0_10px_rgba(0,148,64,0.3)] font-lexend' :
+            points === 1 ? 'bg-secondary text-dark font-lexend' :
+            'bg-white/10 text-white/40 font-lexend border border-white/10'
+          }`}>
+            <Trophy size={10} /> {points} PTS
+          </span>
+        ) : (
+          <span className="text-white/20 text-xs">-</span>
+        )}
+      </td>
+
+      {/* Ação */}
+      <td className="px-6 py-4 text-right whitespace-nowrap">
+        {locked ? (
+          <div className="inline-flex items-center gap-1.5 text-red-500 bg-red-500/10 px-3 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-widest border border-red-500/10">
+            <Lock size={10} />
+            Encerrado
+          </div>
+        ) : (
+          <button 
+            onClick={handleSave}
+            disabled={home === '' || away === '' || !hasChanged}
+            className={`p-2.5 rounded-xl border transition-all ${
+              hasChanged && home !== '' && away !== ''
+                ? 'bg-primary border-primary text-dark hover:bg-white hover:border-white shadow-lg active:scale-95'
+                : prediction
+                  ? 'bg-white/5 border-white/10 text-primary hover:bg-white/10'
+                  : 'bg-white/5 border-white/10 text-white/20 cursor-not-allowed'
+            }`}
+            title={prediction ? "Atualizar Palpite" : "Salvar Palpite"}
+          >
+            {prediction && !hasChanged ? <CheckCircle2 size={16} /> : <Save size={16} />}
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+function PredictionCard({ match, prediction, result, onSave, isKnockout }: any) {
+  const [home, setHome] = useState(prediction?.home ?? '');
+  const [away, setAway] = useState(prediction?.away ?? '');
+  const [qualifier, setQualifier] = useState<'home' | 'away' | undefined>(prediction?.qualifier);
+  const locked = isMatchLocked(match.date, match.time);
+
+  useEffect(() => {
+    setHome(prediction?.home ?? '');
+    setAway(prediction?.away ?? '');
+    setQualifier(prediction?.qualifier);
+  }, [prediction]);
+
+  const hasChanged = prediction 
+    ? (prediction.home !== (home === '' ? '' : Number(home)) || prediction.away !== (away === '' ? '' : Number(away)) || prediction.qualifier !== qualifier)
+    : (home !== '' || away !== '');
+
+  const handleSave = () => {
+    if (locked) return;
+    if (home === '' || away === '') return;
+    onSave(match.id, home, away, qualifier);
+  };
+
+  const handleBlur = () => {
+    if (locked) return;
+    if (home !== '' && away !== '') {
+      let q = qualifier;
+      if (Number(home) !== Number(away)) {
+        q = undefined;
+        setQualifier(undefined);
+      } else if (!q) {
+        q = 'home';
+        setQualifier('home');
+      }
+      onSave(match.id, home, away, q);
+    }
+  };
+
+  const handleSelectQualifier = (side: 'home' | 'away') => {
+    if (locked) return;
+    setQualifier(side);
+    if (home !== '' && away !== '') {
+      onSave(match.id, home, away, side);
+    }
+  };
+
+  const points = result && prediction ? calculatePoints(
+    { homeScore: Number(prediction.home), awayScore: Number(prediction.away) },
+    { homeScore: result.home, awayScore: result.away }
+  ) : null;
+
+  const isHomePlaceholder = !match.homeTeam || match.homeTeam.startsWith('2º') || match.homeTeam.startsWith('1º') || match.homeTeam.startsWith('3º') || match.homeTeam.startsWith('Vencedor') || match.homeTeam.startsWith('Perdedor');
+  const isAwayPlaceholder = !match.awayTeam || match.awayTeam.startsWith('2º') || match.awayTeam.startsWith('1º') || match.awayTeam.startsWith('3º') || match.awayTeam.startsWith('Vencedor') || match.awayTeam.startsWith('Perdedor');
+
+  const showQualifier = home !== '' && away !== '' && Number(home) === Number(away) && isKnockout;
+
+  return (
+    <div className={`glass-dark p-4 rounded-2xl border transition-all ${
+      locked ? 'opacity-85' : 'hover:border-primary/20'
+    } ${
+      points === 3 ? 'border-primary/30 bg-primary/[0.01]' :
+      points === 1 ? 'border-secondary/30 bg-secondary/[0.01]' :
+      'border-white/5'
+    } space-y-3`}>
+      {/* Header: Date, Group & Status */}
+      <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-white/40">
+        <div className="flex items-center gap-1.5">
+          <span className="text-white/60">{match.date.split('-').reverse().slice(0, 2).join('/')} {match.time}</span>
+          <span className="w-1 h-1 bg-white/20 rounded-full" />
+          <span className="text-primary/70">{match.group}</span>
+        </div>
+        <div>
           {locked ? (
-            <div className="px-3 py-1 bg-red-500/10 text-red-500 rounded-full font-black text-[9px] uppercase tracking-widest border border-red-500/10 flex items-center gap-1.5">
-              <Lock size={10} />
-              Encerrado
-            </div>
+            <span className="text-red-500 flex items-center gap-1 text-[8px]"><Lock size={8} /> Fechado</span>
           ) : (
-            <div className="px-3 py-1 bg-primary/10 text-primary rounded-full font-black text-[9px] uppercase tracking-widest border border-primary/10 flex items-center gap-1.5">
-              <div className="w-1 h-1 bg-primary rounded-full animate-pulse" />
-              Aberto
-            </div>
+            <span className="text-primary flex items-center gap-1 text-[8px]"><div className="w-1 h-1 bg-primary rounded-full animate-pulse" /> Aberto</span>
           )}
         </div>
       </div>
 
-      {/* Date & Time Header */}
-      <div className="flex flex-col items-center mb-8 text-center">
-        <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-3 h-3" />
-            {match.date.split('-').reverse().slice(0, 2).join('/')}
-          </div>
-          <div className="w-1 h-1 bg-white/20 rounded-full" />
-          <div className="text-white/60">{match.time}</div>
+      {/* Confronto centralizado */}
+      <div className="flex items-center justify-between gap-2">
+        {/* Time Casa */}
+        <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
+          {isHomePlaceholder ? (
+            <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[9px] font-black text-white/30">?</div>
+          ) : (
+            <img src={getFlagUrl(match.homeTeam)} className="w-8 h-5 object-cover rounded shadow-sm flag-3d" alt="" />
+          )}
+          <span className={`text-[10px] font-bold text-center truncate w-full ${qualifier === 'home' ? 'text-secondary font-black' : 'text-white/80'}`}>
+            {match.homeTeam}
+          </span>
         </div>
-      </div>
 
-      {/* Teams and Inputs */}
-      <div className="flex items-center justify-between gap-2 sm:gap-4 relative">
-        {/* Home Team */}
-        <div className="flex-1 flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 group-hover:border-primary/20 transition-colors overflow-hidden relative shadow-inner">
-            <img src={getFlagUrl(match.homeTeam)} alt={match.homeTeam} className="w-full h-full object-cover scale-110 flag-3d" />
-          </div>
-          <span className="text-xs font-black text-center leading-tight min-h-[32px] flex items-center uppercase tracking-tight text-white/80">{match.homeTeam}</span>
+        {/* Inputs & Seletor de Classificado */}
+        <div className="flex items-center gap-1 justify-center shrink-0">
+          {showQualifier && (
+            <button 
+              onClick={() => handleSelectQualifier('home')}
+              className={`p-0.5 rounded transition-all ${qualifier === 'home' ? 'text-secondary bg-secondary/10 animate-pulse' : 'text-white/10'}`}
+              disabled={locked}
+            >
+              <Trophy size={10} className={qualifier === 'home' ? 'fill-secondary' : ''} />
+            </button>
+          )}
           <input 
-            type="number" 
+            type="number"
             value={home}
             onChange={(e) => setHome(e.target.value)}
+            onBlur={handleBlur}
             disabled={locked}
             placeholder="0"
-            className={`w-16 h-14 bg-black/40 border border-white/10 rounded-2xl text-center text-2xl font-black focus:outline-none transition-all ${locked ? 'opacity-50 cursor-not-allowed' : 'focus:border-primary focus:ring-4 focus:ring-primary/10'}`}
+            className="w-9 h-9 bg-black/40 border border-white/10 rounded-lg text-center font-black text-xs text-white"
           />
-        </div>
-
-        {/* Center Section: X, Result and Points */}
-        <div className="flex flex-col items-center justify-center gap-4 min-w-[80px]">
-          <div className="text-2xl font-black text-white/10">VS</div>
-          
-          <AnimatePresence>
-            {result && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center gap-3"
-              >
-                <div className="flex flex-col items-center">
-                  <span className="text-[8px] font-black text-white/30 uppercase mb-1">Final</span>
-                  <div className="text-lg font-black text-white bg-white/5 border border-white/10 px-3 py-1 rounded-xl">
-                    {result.home} - {result.away}
-                  </div>
-                </div>
-
-                {points !== null && (
-                  <motion.div 
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className={`px-3 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg ${
-                      points === 3 ? 'bg-primary text-dark glow-primary' : 
-                      points === 1 ? 'bg-secondary text-dark' : 
-                      'bg-white/10 text-white/40 border border-white/10'
-                    }`}
-                  >
-                    <Trophy size={12} />
-                    {points} PTS
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Away Team */}
-        <div className="flex-1 flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 group-hover:border-secondary/20 transition-colors overflow-hidden relative shadow-inner">
-            <img src={getFlagUrl(match.awayTeam)} alt={match.awayTeam} className="w-full h-full object-cover scale-110 flag-3d" />
-          </div>
-          <span className="text-xs font-black text-center leading-tight min-h-[32px] flex items-center uppercase tracking-tight text-white/80">{match.awayTeam}</span>
+          <span className="text-white/20 text-[10px]">x</span>
           <input 
-            type="number" 
+            type="number"
             value={away}
             onChange={(e) => setAway(e.target.value)}
+            onBlur={handleBlur}
             disabled={locked}
             placeholder="0"
-            className={`w-16 h-14 bg-black/40 border border-white/10 rounded-2xl text-center text-2xl font-black focus:outline-none transition-all ${locked ? 'opacity-50 cursor-not-allowed' : 'focus:border-secondary focus:ring-4 focus:ring-secondary/10'}`}
+            className="w-9 h-9 bg-black/40 border border-white/10 rounded-lg text-center font-black text-xs text-white"
           />
+          {showQualifier && (
+            <button 
+              onClick={() => handleSelectQualifier('away')}
+              className={`p-0.5 rounded transition-all ${qualifier === 'away' ? 'text-secondary bg-secondary/10 animate-pulse' : 'text-white/10'}`}
+              disabled={locked}
+            >
+              <Trophy size={10} className={qualifier === 'away' ? 'fill-secondary' : ''} />
+            </button>
+          )}
+        </div>
+
+        {/* Time Fora */}
+        <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
+          {isAwayPlaceholder ? (
+            <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[9px] font-black text-white/30">?</div>
+          ) : (
+            <img src={getFlagUrl(match.awayTeam)} className="w-8 h-5 object-cover rounded shadow-sm flag-3d" alt="" />
+          )}
+          <span className={`text-[10px] font-bold text-center truncate w-full ${qualifier === 'away' ? 'text-secondary font-black' : 'text-white/80'}`}>
+            {match.awayTeam}
+          </span>
         </div>
       </div>
-      
-      {/* Action Footer */}
-      <div className="mt-8">
+
+      {/* Rodapé: Resultado Oficial, Pontos e Botão de Salvar */}
+      <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-1">
+        <div className="flex flex-col gap-0.5">
+          {result && (
+            <span className="text-[8px] font-black uppercase text-white/30">
+              Oficial: {result.home}-{result.away} {result.qualifier ? `(${result.qualifier === 'home' ? 'H' : 'A'})` : ''}
+            </span>
+          )}
+          {points !== null && (
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+              points === 3 ? 'bg-primary text-dark shadow-[0_0_8px_rgba(0,148,64,0.2)]' :
+              points === 1 ? 'bg-secondary text-dark' :
+              'bg-white/10 text-white/40'
+            }`}>
+              <Trophy size={8} /> +{points} PTS
+            </span>
+          )}
+        </div>
+
         {!locked && (
           <button 
-            onClick={() => onSave(match.id, Number(home), Number(away))}
-            className="w-full py-4 rounded-[1.25rem] bg-white/5 hover:bg-primary hover:text-dark text-[11px] font-black uppercase tracking-widest transition-all border border-white/5 flex items-center justify-center gap-2 group/btn shadow-xl active:scale-95"
+            onClick={handleSave}
+            disabled={home === '' || away === '' || !hasChanged}
+            className={`px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-1 ${
+              hasChanged && home !== '' && away !== ''
+                ? 'bg-primary border-primary text-dark hover:bg-white hover:border-white shadow-md active:scale-95'
+                : prediction
+                  ? 'bg-white/5 border-white/10 text-primary hover:bg-white/10'
+                  : 'bg-white/5 border-white/10 text-white/20 cursor-not-allowed'
+            }`}
           >
-            {prediction ? (
+            {prediction && !hasChanged ? (
               <>
-                <CheckCircle2 size={16} className="text-primary group-hover/btn:text-dark" />
-                Atualizar Palpite
+                <CheckCircle2 size={10} /> Salvo
               </>
             ) : (
               <>
-                <Trophy size={16} className="text-white/20 group-hover/btn:text-dark" />
-                Salvar Palpite
+                <Save size={10} /> Salvar
               </>
             )}
           </button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
