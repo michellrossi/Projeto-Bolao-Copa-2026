@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../lib/firebase';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
-import { UserCheck, UserX, ShieldCheck, Mail, Calendar, Search } from 'lucide-react';
+import { UserCheck, UserX, ShieldCheck, Mail, Calendar, Search, Trophy } from 'lucide-react';
 
 interface UserData {
   uid: string;
@@ -17,13 +17,14 @@ interface UserData {
 export default function UsersPage() {
   const { isAdmin } = useAuth();
   const [users, setUsers] = useState<UserData[]>([]);
+  const [predictionsCounts, setPredictionsCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!isAdmin) return;
 
-    const unsub = onSnapshot(collection(db, 'users'), (snapshot) => {
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
       const data: UserData[] = [];
       snapshot.forEach((doc) => {
         const userData = doc.data() as UserData;
@@ -38,7 +39,30 @@ export default function UsersPage() {
       setLoading(false);
     });
 
-    return unsub;
+    const unsubPreds = onSnapshot(collection(db, 'predictions'), (snapshot) => {
+      const counts: Record<string, number> = {};
+      snapshot.forEach((doc) => {
+        const matches = doc.data().matches || {};
+        const validCount = Object.values(matches).filter((pred: any) => 
+          pred && 
+          pred.home !== undefined && 
+          pred.home !== null && 
+          pred.home !== '' && 
+          pred.away !== undefined && 
+          pred.away !== null && 
+          pred.away !== ''
+        ).length;
+        counts[doc.id] = validCount;
+      });
+      setPredictionsCounts(counts);
+    }, (error) => {
+      console.error("Erro ao buscar palpites dos usuários:", error);
+    });
+
+    return () => {
+      unsubUsers();
+      unsubPreds();
+    };
   }, [isAdmin]);
 
   const handleToggleApproval = async (uid: string, currentStatus: boolean) => {
@@ -111,6 +135,10 @@ export default function UsersPage() {
                     <div className="flex items-center gap-1.5 text-[10px] text-white/40">
                       <Calendar size={10} />
                       <span>Log: {new Date(user.lastLogin).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-white/40">
+                      <Trophy size={10} />
+                      <span>{predictionsCounts[user.uid] || 0} / 104 palpites salvos</span>
                     </div>
                   </div>
                 </div>

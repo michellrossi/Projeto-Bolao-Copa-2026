@@ -13,6 +13,7 @@ interface UserRanking {
   points: number;
   trend: 'up' | 'down' | 'stable';
   trendValue: number;
+  predictionsCount: number;
 }
 
 export default function RankingPage() {
@@ -58,13 +59,24 @@ export default function RankingPage() {
             }
           });
 
+          const predictionsCount = Object.values(userPreds).filter((pred: any) => 
+            pred && 
+            pred.home !== undefined && 
+            pred.home !== null && 
+            pred.home !== '' && 
+            pred.away !== undefined && 
+            pred.away !== null && 
+            pred.away !== ''
+          ).length;
+
           rankingList.push({
             id: userId,
             name: userData.displayName || 'Competidor',
             photo: userData.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
             points: totalPoints,
             trend: 'stable',
-            trendValue: 0
+            trendValue: 0,
+            predictionsCount
           });
         });
 
@@ -117,6 +129,7 @@ export default function RankingPage() {
             <div className="glass-dark p-4 rounded-2xl w-28 text-center border-white/5">
               <p className="text-[10px] font-bold text-white/60 truncate">{top3[1].name}</p>
               <p className="text-sm font-black text-primary">{top3[1].points} pts</p>
+              <p className="text-[8px] font-medium text-white/40 mt-0.5">{top3[1].predictionsCount}/104 palpites</p>
             </div>
           </div>
         )}
@@ -138,6 +151,7 @@ export default function RankingPage() {
             <div className="glass-dark p-6 rounded-[2rem] w-36 text-center border-primary/20 bg-primary/5">
               <p className="text-xs font-bold text-primary truncate">{top3[0].name}</p>
               <p className="text-xl font-black text-white">{top3[0].points} pts</p>
+              <p className="text-[9px] font-medium text-white/50 mt-0.5">{top3[0].predictionsCount}/104 palpites</p>
             </div>
           </div>
         )}
@@ -156,6 +170,7 @@ export default function RankingPage() {
             <div className="glass-dark p-4 rounded-2xl w-28 text-center border-white/5">
               <p className="text-[10px] font-bold text-white/60 truncate">{top3[2].name}</p>
               <p className="text-sm font-black text-secondary">{top3[2].points} pts</p>
+              <p className="text-[8px] font-medium text-white/40 mt-0.5">{top3[2].predictionsCount}/104 palpites</p>
             </div>
           </div>
         )}
@@ -200,7 +215,7 @@ export default function RankingPage() {
                           <span className="text-[8px] font-black bg-primary text-dark px-1.5 py-0.5 rounded uppercase">Você</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {player.trend === 'up' ? (
                           <div className="flex items-center gap-1 text-[9px] font-black text-primary uppercase">
                             <TrendingUp size={10} /> Subiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
@@ -214,6 +229,10 @@ export default function RankingPage() {
                             <Minus size={10} /> Manteve posição
                           </div>
                         )}
+                        <span className="text-white/20">•</span>
+                        <span className="text-[9px] font-black text-white/40 uppercase">
+                          {player.predictionsCount}/104 palpites
+                        </span>
                       </div>
                     </div>
                   </div>
