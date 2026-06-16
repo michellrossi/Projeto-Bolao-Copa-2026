@@ -4,6 +4,8 @@ import { db } from '../lib/firebase';
 import { collection, onSnapshot, getDocs } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { calculatePoints } from '../lib/scoring';
+import { WORLD_CUP_2026_ROUNDS } from '../lib/matches';
+import { KNOCKOUT_MATCHES } from '../lib/knockout';
 import { Trophy, TrendingUp, TrendingDown, Minus, Crown } from 'lucide-react';
 
 interface UserRanking {
@@ -13,6 +15,9 @@ interface UserRanking {
   points: number;
   trend: 'up' | 'down' | 'stable';
   trendValue: number;
+  cravouPlacar: number;
+  acertouVencedor: number;
+  naoAcertou: number;
 }
 
 export default function RankingPage() {
@@ -36,25 +41,55 @@ export default function RankingPage() {
         const allPredictions: any = {};
         predsSnapshot.forEach(doc => allPredictions[doc.id] = doc.data().matches || {});
 
+        // Unificar todas as partidas para obter informações de data e hora
+        const allMatches = [
+          ...WORLD_CUP_2026_ROUNDS.flatMap(r => r.matches),
+          ...KNOCKOUT_MATCHES
+        ];
+
+        // Identificar o último jogo concluído (mais recente na linha do tempo)
+        let lastCompletedMatchId: string | null = null;
+        let lastDateTimeStr = '';
+
+        Object.keys(results).forEach(matchId => {
+          const matchInfo = allMatches.find(m => m.id === matchId);
+          if (matchInfo) {
+            const dateTimeStr = `${matchInfo.date}T${matchInfo.time}`;
+            if (dateTimeStr > lastDateTimeStr) {
+              lastDateTimeStr = dateTimeStr;
+              lastCompletedMatchId = matchId;
+            }
+          }
+        });
+
         const rankingList: UserRanking[] = [];
 
+        // Calcular a classificação atual
         usersSnapshot.forEach((userDoc) => {
           const userData = userDoc.data();
           
-          // Only show approved users
+          // Apenas mostrar usuários aprovados
           if (userData.approved !== true) return;
 
           const userId = userDoc.id;
           const userPreds = allPredictions[userId] || {};
 
           let totalPoints = 0;
+          let cravou = 0;
+          let acertou = 0;
+          let erro = 0;
+
           Object.entries(userPreds).forEach(([matchId, pred]: any) => {
             const result = results[matchId];
             if (result) {
-              totalPoints += calculatePoints(
+              const pts = calculatePoints(
                 { homeScore: Number(pred.home), awayScore: Number(pred.away) },
                 { homeScore: result.home, awayScore: result.away }
               );
+              totalPoints += pts;
+              if (pts === 3) cravou++;
+              else if (pts === 1) acertou++;
+              else if (pts === 0) erro++;
             }
           });
 
@@ -64,15 +99,76 @@ export default function RankingPage() {
             photo: userData.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
             points: totalPoints,
             trend: 'stable',
-            trendValue: 0
+            trendValue: 0,
+            cravouPlacar: cravou,
+            acertouVencedor: acertou,
+            naoAcertou: erro
           });
         });
 
-        // Sort by points (DESC) then by name (ASC) as tie-breaker
+        // Ordenar classificação atual (pontos DESC, nome ASC)
         rankingList.sort((a, b) => {
           if (b.points !== a.points) return b.points - a.points;
           return a.name.localeCompare(b.name);
         });
+
+        // Calcular a classificação anterior (excluindo o último jogo concluído)
+        const previousRankingList: { id: string; points: number; name: string }[] = [];
+        if (lastCompletedMatchId) {
+          usersSnapshot.forEach((userDoc) => {
+            const userData = userDoc.data();
+            if (userData.approved !== true) return;
+
+            const userId = userDoc.id;
+            const userPreds = allPredictions[userId] || {};
+
+            let prevPoints = 0;
+            Object.entries(userPreds).forEach(([matchId, pred]: any) => {
+              if (matchId === lastCompletedMatchId) return;
+
+              const result = results[matchId];
+              if (result) {
+                prevPoints += calculatePoints(
+                  { homeScore: Number(pred.home), awayScore: Number(pred.away) },
+                  { homeScore: result.home, awayScore: result.away }
+                );
+              }
+            });
+
+            previousRankingList.push({
+              id: userId,
+              name: userData.displayName || 'Competidor',
+              points: prevPoints
+            });
+          });
+
+          // Ordenar classificação anterior (pontos DESC, nome ASC)
+          previousRankingList.sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            return a.name.localeCompare(b.name);
+          });
+
+          // Calcular tendências comparando as posições atual e anterior
+          rankingList.forEach((player, indexAtual) => {
+            const posAtual = indexAtual + 1;
+            const indexAnterior = previousRankingList.findIndex(p => p.id === player.id);
+            if (indexAnterior !== -1) {
+              const posAnterior = indexAnterior + 1;
+              const variacao = posAnterior - posAtual;
+
+              if (variacao > 0) {
+                player.trend = 'up';
+                player.trendValue = variacao;
+              } else if (variacao < 0) {
+                player.trend = 'down';
+                player.trendValue = Math.abs(variacao);
+              } else {
+                player.trend = 'stable';
+                player.trendValue = 0;
+              }
+            }
+          });
+        }
 
         setRankings(rankingList);
         setLoading(false);
@@ -214,6 +310,14 @@ export default function RankingPage() {
                             <Minus size={10} /> Manteve posição
                           </div>
                         )}
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1 text-[9px] font-bold text-white/40 uppercase tracking-wider">
+                        <span className="text-primary font-lexend">cravou placar: <span className="font-black text-white">{player.cravouPlacar}</span></span>
+                        <span className="text-white/10">•</span>
+                        <span className="text-secondary font-lexend">acertou vencedor: <span className="font-black text-white">{player.acertouVencedor}</span></span>
+                        <span className="text-white/10">•</span>
+                        <span className="text-red-400/80 font-lexend">não acertou: <span className="font-black text-white">{player.naoAcertou}</span></span>
                       </div>
                     </div>
                   </div>

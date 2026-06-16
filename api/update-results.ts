@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import * as admin from 'firebase-admin';
+import { initializeApp as initAdminApp, getApps as getAdminApps, cert } from 'firebase-admin/app';
+import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
@@ -98,12 +99,12 @@ export default async function handler(req: Request, res: Response) {
     if (serviceAccountEnv) {
       try {
         const serviceAccount = JSON.parse(serviceAccountEnv);
-        if (!admin.apps.length) {
-          admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
+        if (!getAdminApps().length) {
+          initAdminApp({
+            credential: cert(serviceAccount)
           });
         }
-        db = admin.firestore();
+        db = getAdminFirestore();
         isUsingAdmin = true;
         console.log('Firebase inicializado usando Admin SDK (Acesso Irrestrito).');
       } catch (err: any) {
