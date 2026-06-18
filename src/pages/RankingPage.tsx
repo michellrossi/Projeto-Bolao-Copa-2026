@@ -470,43 +470,34 @@ export default function RankingPage() {
                       <div className="flex items-center gap-1.5">
                         {player.trend === 'up' ? (
                           <div className="flex items-center gap-1 text-[9px] font-black text-primary uppercase">
-                            <TrendingUp size={10} /> Posição: Subiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'} no último jogo
+                            <TrendingUp size={10} /> subiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
                           </div>
                         ) : player.trend === 'down' ? (
                           <div className="flex items-center gap-1 text-[9px] font-black text-red-500 uppercase">
-                            <TrendingDown size={10} /> Posição: Caiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'} no último jogo
+                            <TrendingDown size={10} /> caiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 text-[9px] font-black text-white/50 uppercase">
-                            <Minus size={10} /> Posição: Manteve estável no último jogo
+                            <Minus size={10} /> manteve posição
                           </div>
                         )}
-                      </div>
-                      
-                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1 text-[9px] font-bold text-white/40 uppercase tracking-wider">
-                        <span className="text-primary font-lexend">cravou placar: <span className="font-black text-white">{player.cravouPlacar}</span></span>
-                        <span className="text-white/10">•</span>
-                        <span className="text-secondary font-lexend">acertou vencedor: <span className="font-black text-white">{player.acertouVencedor}</span></span>
-                        <span className="text-white/10">•</span>
-                        <span className="text-red-400/80 font-lexend">não acertou: <span className="font-black text-white">{player.naoAcertou}</span></span>
                       </div>
 
                       {/* Status e Palpite do Último Jogo */}
                       {lastMatch && (
-                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1.5 text-[9px] font-bold uppercase tracking-wider text-white/45 bg-white/[0.02] px-2 py-1 rounded-lg border border-white/5 w-fit">
-                          <span className="text-white/30">Último jogo ({lastMatch.homeTeam} x {lastMatch.awayTeam}):</span>
+                        <div className="flex items-center gap-1 mt-1 text-[9px] font-bold uppercase tracking-wider text-white/40">
                           {player.lastMatchStatus === 'cravou' ? (
-                            <span className="text-primary font-black">Cravou (+3 pts)</span>
+                            <span className="text-primary font-black">cravou</span>
                           ) : player.lastMatchStatus === 'acertou' ? (
-                            <span className="text-secondary font-black">Acertou vencedor (+1 pt)</span>
+                            <span className="text-secondary font-black">acertou vencedor</span>
                           ) : player.lastMatchStatus === 'erro' ? (
-                            <span className="text-red-400 font-black">Errou (0 pts)</span>
+                            <span className="text-red-400 font-black">errou</span>
                           ) : (
-                            <span className="text-white/30">Sem palpite</span>
+                            <span className="text-white/30 font-black">sem palpite</span>
                           )}
                           {player.lastMatchPrediction && (
-                            <span className="text-white/30 font-medium lowercase">
-                              (palpite: {player.lastMatchPrediction.home}x{player.lastMatchPrediction.away})
+                            <span>
+                              - palpite: {player.lastMatchPrediction.home}x{player.lastMatchPrediction.away}
                             </span>
                           )}
                         </div>
@@ -514,9 +505,18 @@ export default function RankingPage() {
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <p className={`text-lg font-black ${isCurrentUser ? 'text-primary' : 'text-white'}`}>{player.points}</p>
-                    <p className="text-[8px] font-black text-white/60 uppercase tracking-widest">Pontos</p>
+                  <div className="flex items-center gap-4 text-right">
+                    {/* Contagem acumulada em 3 linhas */}
+                    <div className="flex flex-col text-[8px] font-bold text-white/40 uppercase tracking-wider leading-tight border-r border-white/5 pr-4 gap-0.5">
+                      <span className="text-primary/95">Cravou: <span className="text-white font-black">{player.cravouPlacar}</span></span>
+                      <span className="text-secondary">Acertou: <span className="text-white font-black">{player.acertouVencedor}</span></span>
+                      <span className="text-red-400/80">Errou: <span className="text-white font-black">{player.naoAcertou}</span></span>
+                    </div>
+
+                    <div>
+                      <p className={`text-lg font-black ${isCurrentUser ? 'text-primary' : 'text-white'} leading-none`}>{player.points}</p>
+                      <p className="text-[8px] font-black text-white/60 uppercase tracking-widest mt-1">Pontos</p>
+                    </div>
                   </div>
                 </motion.div>
               );
