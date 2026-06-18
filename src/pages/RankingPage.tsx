@@ -18,12 +18,17 @@ interface UserRanking {
   cravouPlacar: number;
   acertouVencedor: number;
   naoAcertou: number;
+  lastMatchPoints: number;
+  lastMatchStatus: 'cravou' | 'acertou' | 'erro' | 'sem_palpite';
+  lastMatchPrediction?: { home: number; away: number };
 }
 
 export default function RankingPage() {
   const { user: currentUser } = useAuth();
   const [rankings, setRankings] = useState<UserRanking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastMatch, setLastMatch] = useState<any>(null);
+  const [lastMatchResult, setLastMatchResult] = useState<any>(null);
 
   useEffect(() => {
     // 1. Fetch all results
@@ -49,6 +54,7 @@ export default function RankingPage() {
 
         // Identificar o último jogo concluído (mais recente na linha do tempo)
         let lastCompletedMatchId: string | null = null;
+        let lastCompletedMatch: any = null;
         let lastDateTimeStr = '';
 
         Object.keys(results).forEach(matchId => {
@@ -58,9 +64,18 @@ export default function RankingPage() {
             if (dateTimeStr > lastDateTimeStr) {
               lastDateTimeStr = dateTimeStr;
               lastCompletedMatchId = matchId;
+              lastCompletedMatch = matchInfo;
             }
           }
         });
+
+        if (lastCompletedMatch) {
+          setLastMatch(lastCompletedMatch);
+          setLastMatchResult(results[lastCompletedMatchId!]);
+        } else {
+          setLastMatch(null);
+          setLastMatchResult(null);
+        }
 
         const rankingList: UserRanking[] = [];
 
@@ -93,6 +108,26 @@ export default function RankingPage() {
             }
           });
 
+          let lastMatchPoints = 0;
+          let lastMatchStatus: 'cravou' | 'acertou' | 'erro' | 'sem_palpite' = 'sem_palpite';
+          let lastMatchPrediction: any = undefined;
+
+          if (lastCompletedMatchId) {
+            const lastPred = userPreds[lastCompletedMatchId];
+            const lastResult = results[lastCompletedMatchId];
+            if (lastPred && lastResult) {
+              lastMatchPrediction = { home: Number(lastPred.home), away: Number(lastPred.away) };
+              const pts = calculatePoints(
+                { homeScore: lastMatchPrediction.home, awayScore: lastMatchPrediction.away },
+                { homeScore: lastResult.home, awayScore: lastResult.away }
+              );
+              lastMatchPoints = pts;
+              if (pts === 3) lastMatchStatus = 'cravou';
+              else if (pts === 1) lastMatchStatus = 'acertou';
+              else if (pts === 0) lastMatchStatus = 'erro';
+            }
+          }
+
           rankingList.push({
             id: userId,
             name: userData.displayName || 'Competidor',
@@ -102,7 +137,10 @@ export default function RankingPage() {
             trendValue: 0,
             cravouPlacar: cravou,
             acertouVencedor: acertou,
-            naoAcertou: erro
+            naoAcertou: erro,
+            lastMatchPoints,
+            lastMatchStatus,
+            lastMatchPrediction
           });
         });
 
@@ -197,6 +235,25 @@ export default function RankingPage() {
         <p className="text-white/40 font-medium">Os melhores competidores da rodada</p>
       </div>
 
+      {/* Último Jogo Concluído Banner */}
+      {lastMatch && lastMatchResult && (
+        <div className="mx-auto max-w-sm glass-dark border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-2 shadow-lg">
+          <span className="text-[9px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-full">
+            Último Jogo Concluído
+          </span>
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-xs font-bold text-white/80">{lastMatch.homeTeam}</span>
+            <span className="text-sm font-black text-white px-2 py-0.5 bg-white/5 rounded-lg border border-white/5">
+              {lastMatchResult.home} - {lastMatchResult.away}
+            </span>
+            <span className="text-xs font-bold text-white/80">{lastMatch.awayTeam}</span>
+          </div>
+          <span className="text-[8px] font-bold text-white/30 uppercase">
+            Data: {lastMatch.date.split('-').reverse().join('/')} às {lastMatch.time}
+          </span>
+        </div>
+      )}
+
       {/* Podium UI */}
       <div className="flex items-end justify-center gap-2 md:gap-8 pt-12 pb-8">
         {/* 2nd Place */}
@@ -210,9 +267,47 @@ export default function RankingPage() {
                 2
               </div>
             </div>
-            <div className="glass-dark p-4 rounded-2xl w-28 text-center border-white/5">
-              <p className="text-[10px] font-bold text-white/60 truncate">{top3[1].name}</p>
+            <div className="glass-dark p-4 rounded-2xl w-28 text-center border-white/5 flex flex-col items-center">
+              <p className="text-[10px] font-bold text-white/60 truncate w-full">{top3[1].name}</p>
               <p className="text-sm font-black text-primary">{top3[1].points} pts</p>
+              
+              {/* Informações da última partida */}
+              {lastMatch && (
+                <div className="flex flex-col items-center gap-1 mt-2 pt-2 border-t border-white/5 w-full">
+                  {/* Tendência de posição */}
+                  {top3[1].trend === 'up' ? (
+                    <span className="text-[8px] font-black text-primary uppercase flex items-center gap-0.5">
+                      <TrendingUp size={8} />+{top3[1].trendValue} pos
+                    </span>
+                  ) : top3[1].trend === 'down' ? (
+                    <span className="text-[8px] font-black text-red-500 uppercase flex items-center gap-0.5">
+                      <TrendingDown size={8} />-{top3[1].trendValue} pos
+                    </span>
+                  ) : (
+                    <span className="text-[8px] font-bold text-white/40 uppercase flex items-center gap-0.5">
+                      <Minus size={8} /> Estável
+                    </span>
+                  )}
+                  {/* Status do palpite */}
+                  {top3[1].lastMatchStatus === 'cravou' ? (
+                    <span className="text-[8px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded border border-primary/10 uppercase">
+                      Cravou
+                    </span>
+                  ) : top3[1].lastMatchStatus === 'acertou' ? (
+                    <span className="text-[8px] font-black text-secondary bg-secondary/10 px-1 py-0.5 rounded border border-secondary/10 uppercase">
+                      Acertou
+                    </span>
+                  ) : top3[1].lastMatchStatus === 'erro' ? (
+                    <span className="text-[8px] font-black text-red-400 bg-red-400/10 px-1 py-0.5 rounded border border-red-400/10 uppercase">
+                      Errou
+                    </span>
+                  ) : (
+                    <span className="text-[8px] font-medium text-white/30 bg-white/5 px-1 py-0.5 rounded uppercase">
+                      Sem Palp.
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -231,9 +326,47 @@ export default function RankingPage() {
                 1
               </div>
             </div>
-            <div className="glass-dark p-6 rounded-[2rem] w-36 text-center border-primary/20 bg-primary/5">
-              <p className="text-xs font-bold text-primary truncate">{top3[0].name}</p>
+            <div className="glass-dark p-6 rounded-[2rem] w-36 text-center border-primary/20 bg-primary/5 flex flex-col items-center">
+              <p className="text-xs font-bold text-primary truncate w-full">{top3[0].name}</p>
               <p className="text-xl font-black text-white">{top3[0].points} pts</p>
+              
+              {/* Informações da última partida */}
+              {lastMatch && (
+                <div className="flex flex-col items-center gap-1 mt-2.5 pt-2.5 border-t border-white/5 w-full">
+                  {/* Tendência de posição */}
+                  {top3[0].trend === 'up' ? (
+                    <span className="text-[9px] font-black text-primary uppercase flex items-center gap-0.5">
+                      <TrendingUp size={9} />+{top3[0].trendValue} pos
+                    </span>
+                  ) : top3[0].trend === 'down' ? (
+                    <span className="text-[9px] font-black text-red-500 uppercase flex items-center gap-0.5">
+                      <TrendingDown size={9} />-{top3[0].trendValue} pos
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-white/40 uppercase flex items-center gap-0.5">
+                      <Minus size={9} /> Estável
+                    </span>
+                  )}
+                  {/* Status do palpite */}
+                  {top3[0].lastMatchStatus === 'cravou' ? (
+                    <span className="text-[9px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/10 uppercase">
+                      Cravou
+                    </span>
+                  ) : top3[0].lastMatchStatus === 'acertou' ? (
+                    <span className="text-[9px] font-black text-secondary bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/10 uppercase">
+                      Acertou
+                    </span>
+                  ) : top3[0].lastMatchStatus === 'erro' ? (
+                    <span className="text-[9px] font-black text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded border border-red-400/10 uppercase">
+                      Errou
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-medium text-white/30 bg-white/5 px-1.5 py-0.5 rounded uppercase">
+                      Sem Palp.
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -249,9 +382,47 @@ export default function RankingPage() {
                 3
               </div>
             </div>
-            <div className="glass-dark p-4 rounded-2xl w-28 text-center border-white/5">
-              <p className="text-[10px] font-bold text-white/60 truncate">{top3[2].name}</p>
+            <div className="glass-dark p-4 rounded-2xl w-28 text-center border-white/5 flex flex-col items-center">
+              <p className="text-[10px] font-bold text-white/60 truncate w-full">{top3[2].name}</p>
               <p className="text-sm font-black text-secondary">{top3[2].points} pts</p>
+              
+              {/* Informações da última partida */}
+              {lastMatch && (
+                <div className="flex flex-col items-center gap-1 mt-2 pt-2 border-t border-white/5 w-full">
+                  {/* Tendência de posição */}
+                  {top3[2].trend === 'up' ? (
+                    <span className="text-[8px] font-black text-primary uppercase flex items-center gap-0.5">
+                      <TrendingUp size={8} />+{top3[2].trendValue} pos
+                    </span>
+                  ) : top3[2].trend === 'down' ? (
+                    <span className="text-[8px] font-black text-red-500 uppercase flex items-center gap-0.5">
+                      <TrendingDown size={8} />-{top3[2].trendValue} pos
+                    </span>
+                  ) : (
+                    <span className="text-[8px] font-bold text-white/40 uppercase flex items-center gap-0.5">
+                      <Minus size={8} /> Estável
+                    </span>
+                  )}
+                  {/* Status do palpite */}
+                  {top3[2].lastMatchStatus === 'cravou' ? (
+                    <span className="text-[8px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded border border-primary/10 uppercase">
+                      Cravou
+                    </span>
+                  ) : top3[2].lastMatchStatus === 'acertou' ? (
+                    <span className="text-[8px] font-black text-secondary bg-secondary/10 px-1 py-0.5 rounded border border-secondary/10 uppercase">
+                      Acertou
+                    </span>
+                  ) : top3[2].lastMatchStatus === 'erro' ? (
+                    <span className="text-[8px] font-black text-red-400 bg-red-400/10 px-1 py-0.5 rounded border border-red-400/10 uppercase">
+                      Errou
+                    </span>
+                  ) : (
+                    <span className="text-[8px] font-medium text-white/30 bg-white/5 px-1 py-0.5 rounded uppercase">
+                      Sem Palp.
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -299,15 +470,15 @@ export default function RankingPage() {
                       <div className="flex items-center gap-1.5">
                         {player.trend === 'up' ? (
                           <div className="flex items-center gap-1 text-[9px] font-black text-primary uppercase">
-                            <TrendingUp size={10} /> Subiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
+                            <TrendingUp size={10} /> Posição: Subiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'} no último jogo
                           </div>
                         ) : player.trend === 'down' ? (
                           <div className="flex items-center gap-1 text-[9px] font-black text-red-500 uppercase">
-                            <TrendingDown size={10} /> Caiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'}
+                            <TrendingDown size={10} /> Posição: Caiu {player.trendValue} {player.trendValue === 1 ? 'posição' : 'posições'} no último jogo
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 text-[9px] font-black text-white/50 uppercase">
-                            <Minus size={10} /> Manteve posição
+                            <Minus size={10} /> Posição: Manteve estável no último jogo
                           </div>
                         )}
                       </div>
@@ -319,6 +490,27 @@ export default function RankingPage() {
                         <span className="text-white/10">•</span>
                         <span className="text-red-400/80 font-lexend">não acertou: <span className="font-black text-white">{player.naoAcertou}</span></span>
                       </div>
+
+                      {/* Status e Palpite do Último Jogo */}
+                      {lastMatch && (
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1.5 text-[9px] font-bold uppercase tracking-wider text-white/45 bg-white/[0.02] px-2 py-1 rounded-lg border border-white/5 w-fit">
+                          <span className="text-white/30">Último jogo ({lastMatch.homeTeam} x {lastMatch.awayTeam}):</span>
+                          {player.lastMatchStatus === 'cravou' ? (
+                            <span className="text-primary font-black">Cravou (+3 pts)</span>
+                          ) : player.lastMatchStatus === 'acertou' ? (
+                            <span className="text-secondary font-black">Acertou vencedor (+1 pt)</span>
+                          ) : player.lastMatchStatus === 'erro' ? (
+                            <span className="text-red-400 font-black">Errou (0 pts)</span>
+                          ) : (
+                            <span className="text-white/30">Sem palpite</span>
+                          )}
+                          {player.lastMatchPrediction && (
+                            <span className="text-white/30 font-medium lowercase">
+                              (palpite: {player.lastMatchPrediction.home}x{player.lastMatchPrediction.away})
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
