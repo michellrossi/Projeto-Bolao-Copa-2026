@@ -444,27 +444,27 @@ export default function RankingPage() {
                   key={player.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`
-                    relative flex items-center justify-between p-4 rounded-2xl border transition-all
+                          className={`
+                    relative flex items-center justify-between p-3 md:p-4 rounded-2xl border transition-all
                     ${isCurrentUser ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(0,255,133,0.1)]' : 'glass-dark border-white/5 hover:bg-white/[0.03]'}
                   `}
                 >
-                  <div className="flex items-center gap-4">
-                    <span className={`w-8 text-sm font-black ${isCurrentUser ? 'text-primary' : 'text-white/40'}`}>
+                  <div className="flex items-center gap-2 md:gap-4 min-w-0">
+                    <span className={`w-6 md:w-8 text-sm font-black ${isCurrentUser ? 'text-primary' : 'text-white/40'} shrink-0`}>
                       {index + 1}º
                     </span>
-                    <div className="relative">
+                    <div className="relative shrink-0">
                       <img src={player.photo} className="w-10 h-10 rounded-full object-cover" alt="" />
                       {isCurrentUser && (
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-dark" />
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-sm text-white">{player.name}</p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+                        <p className="font-bold text-sm text-white hidden md:block truncate">{player.name}</p>
+                        <p className="font-bold text-sm text-white block md:hidden truncate">{player.name.split(' ')[0]}</p>
                         {isCurrentUser && (
-                          <span className="text-[8px] font-black bg-primary text-dark px-1.5 py-0.5 rounded uppercase">Você</span>
+                          <span className="text-[8px] font-black bg-primary text-dark px-1.5 py-0.5 rounded uppercase shrink-0">Você</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -505,9 +505,9 @@ export default function RankingPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-right">
+                  <div className="flex items-center gap-2 md:gap-4 text-right shrink-0">
                     {/* Contagem acumulada em 3 linhas */}
-                    <div className="flex flex-col text-[8px] font-bold text-white/40 uppercase tracking-wider leading-tight border-r border-white/5 pr-4 gap-0.5">
+                    <div className="flex flex-col text-[8px] font-bold text-white/40 uppercase tracking-wider leading-tight border-r border-white/5 pr-2 md:pr-4 gap-0.5">
                       <span className="text-primary/95">Cravou: <span className="text-white font-black">{player.cravouPlacar}</span></span>
                       <span className="text-secondary">Acertou: <span className="text-white font-black">{player.acertouVencedor}</span></span>
                       <span className="text-red-400/80">Errou: <span className="text-white font-black">{player.naoAcertou}</span></span>
